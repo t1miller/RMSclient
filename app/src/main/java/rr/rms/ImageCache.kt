@@ -14,10 +14,12 @@ object ImageCache {
     }
 
     /** The default user, Grateful Quesadilla */
-    const val DEFAULT_URL = "user.grateful.quesadilla"
+    private val USER_URL = "user.grateful.quesadilla." + Random.nextInt(0, 1000)
+
+    const val GENERIC_URL = "user.grateful.quesadilla.8008"
 
     /** Mr. Quesadilla serves orange sunshine */
-     const val DEFAULT_IMAGE_NAME = "orange_sunshine.jpg"
+    private const val DEFAULT_USER_IMAGE = "orange_sunshine.jpg"
 
     /** Cached data */
     private var cache: MutableMap<String, Set<Block>> = mutableMapOf()
@@ -26,33 +28,26 @@ object ImageCache {
     private var cacheChangedListeners = mutableListOf<ImageCacheListener>()
 
     init {
-        // initialize the cache with a default image
         addDefaultImage(MainApplication.applicationContext)
     }
 
-    /**  */
-    fun updateCache(newBlocks: Set<Block>, url: String) {
+    fun add(newBlocks: Set<Block>, url: String) {
         cache[url] = newBlocks
         notifyListeners()
         Timber.d("updating the cache with %d blocks", newBlocks.size)
         Timber.d("url: %s", url)
     }
 
-    /***/
-    fun updateCache(imgData: ByteArray, url: String) {
-        updateCache(BlockManager.generateBlocks(imgData, url), url)
+    fun add(imgData: ByteArray, url: String) {
+        add(BlockManager.generateBlocks(imgData, url), url)
     }
 
     /**
      * Get default image
      */
     fun getDefaultImage(): ByteArray {
-        val defaultImage = cache[DEFAULT_URL].orEmpty()
+        val defaultImage = cache[USER_URL].orEmpty()
         return BlockManager.blocksToData(defaultImage)
-    }
-
-    fun getUniqueName(): String {
-        return DEFAULT_URL + Random.nextInt(0, 100)
     }
 
     /**
@@ -65,16 +60,16 @@ object ImageCache {
     /**
      * Add default images to the cache
      */
-    fun addDefaultImage(context: Context) {
+    private fun addDefaultImage(context: Context) {
         // get defaults from .../assets
         val defaultBlocks = BlockManager.generateBlocks(
             ResourceManagerUtils.getAssetFileAsByteArray(
                 context,
-                DEFAULT_IMAGE_NAME
-            ), DEFAULT_URL
+                DEFAULT_USER_IMAGE
+            ), USER_URL
         )
         val stampedBlocks = BlockManager.stamp(defaultBlocks)
-        updateCache(stampedBlocks, DEFAULT_URL)
+        add(stampedBlocks, USER_URL)
     }
 
     fun addCacheChangedListener(listener: ImageCache.ImageCacheListener) {
