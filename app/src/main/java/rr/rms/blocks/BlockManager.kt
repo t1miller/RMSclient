@@ -1,3 +1,4 @@
+package rr.rms.blocks
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,9 +11,8 @@ import kotlin.random.Random
 
 object BlockManager{
 
-    const val CHUNKY_SIZE = 20*1000 // some measurement of size, idk KB
+    private const val CHUNKY_SIZE = 20*1000 // some measurement of size, idk KB
 
-    // generate blocks from chunks
     fun generateBlocks(data: ByteArray, url: String) : Set<Block> {
         val dataList = data.toList()
         return dataList.chunked(CHUNKY_SIZE).map {
@@ -23,7 +23,6 @@ object BlockManager{
         }.toSet()
     }
 
-    // generate a MD5 hash from a chunk of data
     fun generateHash(data: ByteArray) : String {
         val md = MessageDigest.getInstance("MD5")
         val hash = md.digest(data).toString()
@@ -31,7 +30,6 @@ object BlockManager{
         return hash
     }
 
-    // blocks to data
     fun blocksToData(blocks: Set<Block>) : ByteArray {
         return blocks.fold(ByteArray(0)){
             sum, element -> sum + element.data
@@ -44,7 +42,6 @@ object BlockManager{
         return bitmap
     }
 
-    // TODO: Move me to a util function
     // sign image with a dancing bear
     private fun bearhug(bytes : ByteArray) : ByteArray{
         // Assume JPEG byte array
@@ -71,12 +68,9 @@ object BlockManager{
 
     fun stamp(blocks: Set<Block>) : ByteArray{
         // Get data from chunks of blocks
-        val data = BlockManager.blocksToData(blocks)
+        val data = blocksToData(blocks)
 
         // stamp it
-        return BlockManager.bearhug(data)
+        return bearhug(data)
     }
-
-
-
 }

@@ -1,7 +1,6 @@
-package rr.rms.ui.wifiaware
+package rr.rms.wifiaware
 
-import Block
-import ImageCache
+
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -21,14 +20,17 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_wifi_aware_tester.*
+import rr.rms.ImageCache
 import rr.rms.R
-import rr.rms.utils.WifiAwareController
-import rr.rms.utils.WifiAwareUtils
+import rr.rms.blocks.Block
+import rr.rms.ui.wifiaware.NodeDataItem
+import rr.rms.ui.wifiaware.NodeRecyclerViewAdapter
 import timber.log.Timber
 import java.net.Socket
 
 
-class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener, NodeRecyclerViewAdapter.NodeListCallback {
+class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
+    NodeRecyclerViewAdapter.NodeListCallback {
 
     private val PERMISSION_REQUEST_CODE = 101
 
@@ -57,7 +59,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener, No
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(rr.rms.R.layout.activity_wifi_aware_tester)
+        setContentView(R.layout.activity_wifi_aware_tester)
 
         // permission check
         setupPermissions()
@@ -131,14 +133,11 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener, No
     }
 
     private fun setupPermissions() {
-//        val permissionCoarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
         val permissionFine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
         if (permissionFine != PackageManager.PERMISSION_GRANTED){
-//            permissionCoarse != PackageManager.PERMISSION_GRANTED) {
             Timber.d("need to ask user for permission")
             showPermissionDialog()
         }
-
     }
 
     private fun showPermissionDialog() {
@@ -270,7 +269,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener, No
         makeNetworkRequest()
         mSocket?.apply {
             NetworkUtils.receiveBytes(this)?.apply {
-                ImageCache.add(this,"blah")
+                ImageCache.add(this, "blah")
                 appendToLog("added neighbors image to cache")
             }
         }

@@ -1,6 +1,8 @@
+package rr.rms
 
 import android.content.Context
-import rr.rms.MainApplication
+import rr.rms.blocks.Block
+import rr.rms.blocks.BlockManager
 import rr.rms.ui.wifiaware.NodeDataItem
 import rr.rms.utils.ResourceManagerUtils
 import timber.log.Timber
@@ -31,7 +33,7 @@ object ImageCache {
         addDefaultImage(MainApplication.applicationContext)
     }
 
-    fun add(newBlocks: Set<Block>, url: String) {
+    private fun add(newBlocks: Set<Block>, url: String) {
         cache[url] = newBlocks
         notifyListeners()
         Timber.d("updating the cache with %d blocks", newBlocks.size)
@@ -72,7 +74,7 @@ object ImageCache {
         add(stampedBlocks, USER_URL)
     }
 
-    fun addCacheChangedListener(listener: ImageCache.ImageCacheListener) {
+    fun addCacheChangedListener(listener: ImageCacheListener) {
         cacheChangedListeners.add(listener)
     }
 

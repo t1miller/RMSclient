@@ -10,16 +10,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-import rr.rms.ui.wifiaware.WifiAwareActivity
-import rr.rms.utils.WifiAwareUtils
+import rr.rms.wifiaware.WifiAwareActivity
 import timber.log.Timber
 import timber.log.Timber.plant
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-
-//    object CONSTANTS {
-//        val fragmentLaunchkey = "FRAGMENT_TO_LAUNCH"
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +33,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         navView.setNavigationItemSelectedListener(this)
-
-        // perform some feature checks.
-        if(!WifiAwareUtils.isAvailable(this)) {
-            Timber.e("quitting, wifi aware not available")
-            return
-        }
 
     }
 
