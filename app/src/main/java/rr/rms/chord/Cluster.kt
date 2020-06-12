@@ -21,7 +21,18 @@ import kotlin.math.pow
  */
 class Cluster {
 
-    private var nodeId: Long = getChordId()
+    // todo hash should be from a real ip
+    var nodeId: Long = getChordId()
+
+    /** The finger table. finger[0] = successor node */
+    private val finger: Array<Cluster?> = Array(M){ Cluster() }
+
+    var predecessor: Cluster? = Cluster()
+
+    var successor: Cluster? = Cluster()
+
+    /** keep track of finger index for maintenence */
+    private var next: Int = 0
 
     companion object {
         /**
@@ -40,28 +51,90 @@ class Cluster {
         const val R = 10
     }
 
+    fun create() {
+        predecessor = null
+        successor = null
+    }
 
-//    private var predecessor: Cluster? = null
-//
-//    /** The finger table. finger[0] = successor node */
-//    private val finger: Array<Cluster?> = Array(10){null}
-//
-//    private val start = finger.size
+    fun join(cluster: Cluster) {
+        predecessor = null
+        successor = cluster.findSuccessor(nodeId)
+    }
 
-    fun join(id: String?) {
+    /**
+     * Called periodically.
+     */
+    fun stabilize() {
+        successor?.let {
+            val x = it.predecessor
+            if (x?.nodeId in nodeId+1 until it.nodeId) {
+                successor = x
+            }
+            it.notify(this)
+        }
+    }
 
+    /**
+     * nprime thinks it might be our predecessor
+     */
+    fun notify(nprime: Cluster) {
+        if (predecessor == null || predecessor?.nodeId!! < nprime.nodeId && nprime.nodeId < nodeId ){
+            predecessor = nprime
+        }
+    }
+
+    /**
+     * Called periodically. Refreshes finger table entries
+     */
+    fun fixFingers() {
+        if (next >= M) {
+            next = 0
+        }
+        finger[next] = findSuccessor(nodeId + 2.0.pow(next-1).toLong())
+        next += 1
+    }
+
+    /**
+     * Called periodically. Checks whether predecessor has failed
+     */
+    fun checkPredecessors() {
+        if(predecessor?.isDead() == true){
+            predecessor = null
+        }
     }
 
     /**
      *  Initialize finger table of local node
      *  @param id is an arbitrary node already in the network
      */
-    fun initFingerTable(node: Cluster) {
+    fun isDead(): Boolean {
+        Timber.d("Todo")
+        return false
+    }
 
+    private fun findSuccessor(id: Long): Cluster? {
+        return if (id in (nodeId + 1) until id + 1){
+            successor
+        } else {
+            val n0 = closestPrecedingCluster(id)
+            n0?.findSuccessor(id)
+        }
+    }
+
+    /**
+     *  Search finger table for the highest predecessor of id
+     *  @param id Id of cl
+     */
+    private fun closestPrecedingCluster(id: Long): Cluster? {
+        for (i in M-1 downTo 0) {
+            if (finger[i]?.nodeId in (nodeId + 1) until id) {
+                return successor
+            }
+        }
+        return this
     }
 
     private fun getChordId(): Long {
-        // todo hash should be from a real ip
         val input = UUID.randomUUID().toString()
 
         val md = MessageDigest.getInstance("SHA-1")
