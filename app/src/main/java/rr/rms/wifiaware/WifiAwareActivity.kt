@@ -20,16 +20,16 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_wifi_aware_tester.*
-import rr.rms.ImageCache
 import rr.rms.R
 import rr.rms.blocks.Block
+import rr.rms.blocks.BlockCache
 import rr.rms.ui.wifiaware.NodeDataItem
 import rr.rms.ui.wifiaware.NodeRecyclerViewAdapter
 import timber.log.Timber
 import java.net.Socket
 
 
-class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
+class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
     NodeRecyclerViewAdapter.NodeListCallback {
 
     private val PERMISSION_REQUEST_CODE = 101
@@ -65,10 +65,10 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
         setupPermissions()
 
         // register to get notified when the cache changes
-        ImageCache.addCacheChangedListener(this)
+        BlockCache.addCacheChangedListener(this)
 
         broadcast_button.setOnClickListener {
-            publish(ImageCache.GENERIC_URL)
+            publish(BlockCache.GENERIC_URL)
         }
 
         close_button.setOnClickListener {
@@ -76,7 +76,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
         }
 
         subscribe_button.setOnClickListener {
-            subscribe(ImageCache.GENERIC_URL)
+            subscribe(BlockCache.GENERIC_URL)
         }
 
         msg_button.setOnClickListener {
@@ -109,7 +109,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
 
 
         val recyclerView = findViewById<RecyclerView>(R.id.list)
-        recylerAdapter = NodeRecyclerViewAdapter(ImageCache.cacheToNodeData(), this)
+        recylerAdapter = NodeRecyclerViewAdapter(BlockCache.cacheToNodeData(), this)
         with(recyclerView) {
             layoutManager = LinearLayoutManager(applicationContext, RecyclerView.VERTICAL, false)
             adapter = recylerAdapter
@@ -259,7 +259,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
     private fun sendBear(){
         makeNetworkRequest()
         mSocket?.apply {
-            val image = ImageCache.getDefaultImage()
+            val image = BlockCache.getDefaultImage()
             NetworkUtils.sendBytes(this, image)
             appendToLog("sending image to neighbor")
         }
@@ -269,7 +269,7 @@ class WifiAwareActivity : AppCompatActivity(), ImageCache.ImageCacheListener,
         makeNetworkRequest()
         mSocket?.apply {
             NetworkUtils.receiveBytes(this)?.apply {
-                ImageCache.add(this, "blah")
+                BlockCache.add(this, "blah")
                 appendToLog("added neighbors image to cache")
             }
         }

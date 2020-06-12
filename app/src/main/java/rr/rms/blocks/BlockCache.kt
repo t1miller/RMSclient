@@ -1,15 +1,14 @@
-package rr.rms
+package rr.rms.blocks
 
 import android.content.Context
-import rr.rms.blocks.Block
-import rr.rms.blocks.BlockManager
+import rr.rms.MainApplication
 import rr.rms.ui.wifiaware.NodeDataItem
 import rr.rms.utils.ResourceManagerUtils
 import timber.log.Timber
 import kotlin.random.Random
 
 
-object ImageCache {
+object BlockCache {
 
     interface ImageCacheListener {
         fun onCacheChanged(newCache: MutableMap<String, Set<Block>>)

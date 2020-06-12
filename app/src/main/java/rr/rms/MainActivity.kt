@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import rr.rms.chord.ClusterActivity
 import rr.rms.wifiaware.WifiAwareActivity
 import timber.log.Timber
 import timber.log.Timber.plant
@@ -66,6 +67,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.wifiaware -> {
                 val intent = Intent(this, WifiAwareActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.cluster -> {
+                val intent = Intent(this, ClusterActivity::class.java)
                 startActivity(intent)
             }
         }

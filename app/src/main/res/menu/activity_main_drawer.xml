@@ -11,7 +11,12 @@
         <item
                 android:id="@+id/wifiaware"
                 android:icon="@drawable/cell_wifi"
-                android:title="WifiAwareTest"/>
+                android:title="Wifi-Aware Test"/>
+
+        <item
+                android:id="@+id/cluster"
+                android:icon="@drawable/cell_wifi"
+                android:title="Chord Test"/>
     </group>
 
 </menu>
