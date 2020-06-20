@@ -14,7 +14,7 @@
                 android:title="Wifi-Aware Test"/>
 
         <item
-                android:id="@+id/cluster"
+                android:id="@+id/node"
                 android:icon="@drawable/cell_wifi"
                 android:title="Chord Test"/>
     </group>

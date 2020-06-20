@@ -1,7 +1,6 @@
 package rr.rms.ui.wifiaware
 
 
-import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_nodesignature.view.*
 import rr.rms.R
 
-data class NodeDataItem(val node_id: String, val bitmap: Bitmap)
 
 class NodeRecyclerViewAdapter(
     private val mValues: List<NodeDataItem>,

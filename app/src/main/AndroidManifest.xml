@@ -19,8 +19,8 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name=".chord.ClusterActivity"
-                android:label="@string/title_activity_cluster"
+                android:name=".chord.NodeActivity"
+                android:label="@string/title_activity_node"
                 android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity android:name=".wifiaware.WifiAwareActivity">

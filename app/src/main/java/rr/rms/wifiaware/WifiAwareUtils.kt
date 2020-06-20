@@ -8,22 +8,41 @@ import java.net.ServerSocket
 
 object WifiAwareUtils {
 
-    // Generate the configuration object necessary to publish a service,
-    // or in our case, we're going to use a url like scheme
-    // TODO: A fun idea in the future would be to send a JSON of
-    // TODO: of websites we want and websites we have.
-    fun generatePublishConfig(url: String): PublishConfig {
+    /**
+     * Generate a publish config
+     * @param serviceName The service name to subscribe to
+     * @return A PublishConfig
+     */
+    fun generatePublishConfig(serviceName: String): PublishConfig {
         return PublishConfig.Builder()
-            .setServiceName(url)
+            .setServiceName(serviceName)
             .setServiceSpecificInfo("android".toByteArray())
             .build()
     }
 
-    // Generate the configuration object necessary to subscribe to a particular a service,
-    // or in our case, we're going to use a url like scheme
-    fun generateSubscribeConfig(url: String): SubscribeConfig {
+//    /**
+//     * Generate a subscribe config
+//     * @param serviceName The service name to subscribe to
+//     * @param filter An optional list of other services to also subscribe to
+//     * @return A SubscribeConfig
+//     */
+//    fun generateSubscribeConfig(serviceName: String): SubscribeConfig {
+//        return SubscribeConfig.Builder()
+//            .setServiceName(serviceName)
+//            .setServiceSpecificInfo("android".toByteArray())
+//            .build()
+//    }
+//
+    /**
+     * Generate a subscribe config
+     * @param serviceName The service name to subscribe to
+     * @param filter An optional list of other services to also subscribe to
+     * @return A SubscribeConfig
+     */
+    fun generateSubscribeConfig(serviceName: String, filter: List<String>): SubscribeConfig {
         return SubscribeConfig.Builder()
-            .setServiceName(url)
+            .setServiceName(serviceName)
+            .setMatchFilter(filter.map {it.toByteArray()})
             .setServiceSpecificInfo("android".toByteArray())
             .build()
     }
@@ -38,6 +57,5 @@ object WifiAwareUtils {
         val ss = ServerSocket(0)
         return ss.localPort
     }
-
 }
 

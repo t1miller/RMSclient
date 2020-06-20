@@ -1,4 +1,4 @@
-package rr.rms.blocks
+package rr.rms.cache
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import kotlin.random.Random
 
-object BlockManager{
+object BlockUtils{
 
     private const val CHUNKY_SIZE = 20*1000 // some measurement of size, idk KB
 
@@ -23,7 +23,7 @@ object BlockManager{
         }.toSet()
     }
 
-    fun generateHash(data: ByteArray) : String {
+    private fun generateHash(data: ByteArray) : String {
         val md = MessageDigest.getInstance("MD5")
         val hash = md.digest(data).toString()
         Timber.d("generated hash %s", hash)
@@ -38,8 +38,7 @@ object BlockManager{
 
     fun blocksToBitmap(blocks: Set<Block>) : Bitmap {
         val bytes : ByteArray = blocksToData(blocks)
-        val bitmap : Bitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.size)  // Assume JPEG byte array
-        return bitmap
+        return BitmapFactory.decodeByteArray(bytes,0, bytes.size)
     }
 
     // sign image with a dancing bear

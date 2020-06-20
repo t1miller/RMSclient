@@ -21,15 +21,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_wifi_aware_tester.*
 import rr.rms.R
-import rr.rms.blocks.Block
-import rr.rms.blocks.BlockCache
+import rr.rms.cache.Block
+import rr.rms.cache.BlockCache
+import rr.rms.cache.BlockCache.Keys.GENERIC_URL
 import rr.rms.ui.wifiaware.NodeDataItem
 import rr.rms.ui.wifiaware.NodeRecyclerViewAdapter
+import rr.rms.utils.NetworkUtils
 import timber.log.Timber
 import java.net.Socket
 
 
-class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
+class WifiAwareActivity : AppCompatActivity(),
+    BlockCache.ImageCacheListener,
     NodeRecyclerViewAdapter.NodeListCallback {
 
     private val PERMISSION_REQUEST_CODE = 101
@@ -52,7 +55,10 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
 
     private var recylerAdapter: NodeRecyclerViewAdapter? = null
 
-    override fun onCacheChanged(newCache: MutableMap<String, Set<Block>>) {
+    override fun onCacheChanged(
+        newCache: MutableMap<String, Set<Block>>,
+        keysWeWant: MutableSet<String>
+    ) {
         appendToLog("onCacheChanged() called")
         recylerAdapter?.notifyDataSetChanged()
     }
@@ -68,15 +74,15 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
         BlockCache.addCacheChangedListener(this)
 
         broadcast_button.setOnClickListener {
-            publish(BlockCache.GENERIC_URL)
+            publish(GENERIC_URL)
         }
 
-        close_button.setOnClickListener {
-            WifiAwareController.closeAwareSession()
-        }
+//        close_button.setOnClickListener {
+//            WifiAwareController.closeAwareSession()
+//        }
 
         subscribe_button.setOnClickListener {
-            subscribe(BlockCache.GENERIC_URL)
+//            subscribe(GENERIC_URL)
         }
 
         msg_button.setOnClickListener {
@@ -120,7 +126,7 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
     override fun onPause() {
         super.onPause()
         unregisterReceiver(receiver)
-        WifiAwareController.closeAwareSession()
+//        WifiAwareController.closeAwareSession()
     }
 
     override fun onResume() {
@@ -191,40 +197,40 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
     }
 
 
-    /**
-     *  Subscribe to ask for other peoples' bear images.
-     */
-    private fun subscribe(url: String) {
-        appendToLog("Subscribing to $url")
-        session?.subscribe(
-            WifiAwareUtils.generateSubscribeConfig(url),
-            object : DiscoverySessionCallback() {
-
-                override fun onMessageReceived(peerHandle: PeerHandle, message: ByteArray) {
-                    appendToLog("Subscriber sent msg: $message \nSending them a bear.")
-                }
-
-                override fun onSubscribeStarted(session: SubscribeDiscoverySession) {
-                    subscribeSession = session
-                    appendToLog("onSubscribeStarted()")
-                }
-
-                override fun onServiceDiscovered(
-                    peerHandle: PeerHandle,
-                    serviceSpecificInfo: ByteArray,
-                    matchFilter: List<ByteArray>
-                ) {
-                    val serviceName = serviceSpecificInfo.toString()
-                    val msgToSend = "Give me your bear".toByteArray()
-
-                    subscribeSession?.sendMessage(peerHandle, 0, msgToSend)
-                    appendToLog("onServiceDiscovered():\n\tservice name: $serviceName\n\tsending: ${String(msgToSend)}")
-                }
-
-            },
-            null
-        )
-    }
+//    /**
+//     *  Subscribe to ask for other peoples' bear images.
+//     */
+//    private fun subscribe(url: String) {
+//        appendToLog("Subscribing to $url")
+//        session?.subscribe(
+//            WifiAwareUtils.generateSubscribeConfig(url),
+//            object : DiscoverySessionCallback() {
+//
+//                override fun onMessageReceived(peerHandle: PeerHandle, message: ByteArray) {
+//                    appendToLog("Subscriber sent msg: $message \nSending them a bear.")
+//                }
+//
+//                override fun onSubscribeStarted(session: SubscribeDiscoverySession) {
+//                    subscribeSession = session
+//                    appendToLog("onSubscribeStarted()")
+//                }
+//
+//                override fun onServiceDiscovered(
+//                    peerHandle: PeerHandle,
+//                    serviceSpecificInfo: ByteArray,
+//                    matchFilter: List<ByteArray>
+//                ) {
+//                    val serviceName = serviceSpecificInfo.toString()
+//                    val msgToSend = "Give me your bear".toByteArray()
+//
+//                    subscribeSession?.sendMessage(peerHandle, 0, msgToSend)
+//                    appendToLog("onServiceDiscovered():\n\tservice name: $serviceName\n\tsending: ${String(msgToSend)}")
+//                }
+//
+//            },
+//            null
+//        )
+//    }
 
     private fun makeNetworkRequest() {
         val callback = object : ConnectivityManager.NetworkCallback() {
@@ -269,7 +275,7 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
         makeNetworkRequest()
         mSocket?.apply {
             NetworkUtils.receiveBytes(this)?.apply {
-                BlockCache.add(this, "blah")
+                BlockCache.add("blah", this)
                 appendToLog("added neighbors image to cache")
             }
         }
@@ -292,25 +298,6 @@ class WifiAwareActivity : AppCompatActivity(), BlockCache.ImageCacheListener,
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI_AWARE)
             .setNetworkSpecifier(networkSpecifier)
             .build()
-    }
-
-    object NetworkUtils {
-
-        fun receiveBytes(socket: Socket) : ByteArray?{
-            val inputStream = socket.getInputStream()
-            return inputStream.readBytes()
-        }
-
-        fun sendBytes(socket: Socket, byteArray: ByteArray) {
-            val outputStream = socket.getOutputStream()
-            try {
-                outputStream.write(byteArray)
-            }catch (e: Exception) {
-                Timber.e(e)
-            }finally {
-                outputStream.close()
-            }
-        }
     }
 
 }

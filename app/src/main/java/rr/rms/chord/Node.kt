@@ -9,7 +9,7 @@ import kotlin.math.pow
 
 
 /**
- *  A Cluster:
+ *  A Node:
  *  - Is a Chord Node https://en.wikipedia.org/wiki/Chord_(peer-to-peer)
  *  - Has at least one member Node
  *  - Acts as one addressable cohesive server
@@ -19,24 +19,24 @@ import kotlin.math.pow
  *  - Has a socket that responds to ip-address
  *  - Has the ability to lookup all other internet enabled clusters in its chord network
  */
-class Cluster {
+class Node {
 
     // todo hash should be from a real ip
     var nodeId: Long = getChordId()
 
-    /** The finger table. finger[0] = successor node */
-    private val finger: Array<Cluster?> = Array(M){ Cluster() }
+    private val finger: Array<Node?> = Array(M){ Node() }
 
-    var predecessor: Cluster? = Cluster()
+    var predecessor: Node? = Node()
 
-    var successor: Cluster? = Cluster()
+    var successor: Node? = Node()
 
     /** keep track of finger index for maintenence */
     private var next: Int = 0
 
     companion object {
         /**
-         *  Parameter that controls hash table collision rate.
+         *  P
+         *  arameter that controls hash table collision rate.
          *  Max Network size is 2^M
          */
         const val M = 20
@@ -51,20 +51,20 @@ class Cluster {
         const val R = 10
     }
 
-    fun create() {
+    private fun create() {
         predecessor = null
         successor = null
     }
 
-    fun join(cluster: Cluster) {
+    private fun join(node: Node) {
         predecessor = null
-        successor = cluster.findSuccessor(nodeId)
+        successor = node.findSuccessor(nodeId)
     }
 
     /**
      * Called periodically.
      */
-    fun stabilize() {
+    private fun stabilize() {
         successor?.let {
             val x = it.predecessor
             if (x?.nodeId in nodeId+1 until it.nodeId) {
@@ -77,7 +77,7 @@ class Cluster {
     /**
      * nprime thinks it might be our predecessor
      */
-    fun notify(nprime: Cluster) {
+    private fun notify(nprime: Node) {
         if (predecessor == null || predecessor?.nodeId!! < nprime.nodeId && nprime.nodeId < nodeId ){
             predecessor = nprime
         }
@@ -97,7 +97,7 @@ class Cluster {
     /**
      * Called periodically. Checks whether predecessor has failed
      */
-    fun checkPredecessors() {
+    private fun checkPredecessors() {
         if(predecessor?.isDead() == true){
             predecessor = null
         }
@@ -107,12 +107,12 @@ class Cluster {
      *  Initialize finger table of local node
      *  @param id is an arbitrary node already in the network
      */
-    fun isDead(): Boolean {
+    private fun isDead(): Boolean {
         Timber.d("Todo")
         return false
     }
 
-    private fun findSuccessor(id: Long): Cluster? {
+    private fun findSuccessor(id: Long): Node? {
         return if (id in (nodeId + 1) until id + 1){
             successor
         } else {
@@ -125,7 +125,7 @@ class Cluster {
      *  Search finger table for the highest predecessor of id
      *  @param id Id of cl
      */
-    private fun closestPrecedingCluster(id: Long): Cluster? {
+    private fun closestPrecedingCluster(id: Long): Node? {
         for (i in M-1 downTo 0) {
             if (finger[i]?.nodeId in (nodeId + 1) until id) {
                 return successor
