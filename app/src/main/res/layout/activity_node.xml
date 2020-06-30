@@ -78,7 +78,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/switch1"
                 app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/subscribeKey"/>
+                android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/publishOnBoarding"/>
 
         <TextView
                 android:text="Logs:"
@@ -127,6 +127,22 @@
                 android:id="@+id/cacheTextView" app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginStart="8dp" android:layout_marginTop="8dp"
                 app:layout_constraintTop_toBottomOf="@+id/textView3"/>
+        <Button
+                android:text="Subscribe onBoarding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/subscribeOnBoarding"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+                app:layout_constraintTop_toTopOf="@+id/publishOnBoarding"
+                app:layout_constraintBottom_toBottomOf="@+id/publishOnBoarding"/>
+        <Button
+                android:text="Publish onBoarding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/publishOnBoarding"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="8dp" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/subscribeKey"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

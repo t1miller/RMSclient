@@ -1,5 +1,10 @@
 package rr.rms.chord
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import rr.rms.MainApplication
+import rr.rms.cache.BlockCache
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -24,13 +29,24 @@ class Node {
     // todo hash should be from a real ip
     var nodeId: Long = getChordId()
 
-    private val finger: Array<Node?> = Array(M){ Node() }
+    private var finger: Array<Node?> = emptyArray()
 
-    var predecessor: Node? = Node()
+    var predecessor: Node? = null
 
-    var successor: Node? = Node()
+    var successor: Node? = null
 
-    /** keep track of finger index for maintenence */
+    var hasInternet: Boolean? = null
+
+    var cache: BlockCache? = null
+
+    constructor()
+
+    constructor(hasInternet: Boolean?, nodeId: Long) {
+        this.nodeId = nodeId
+        this.hasInternet = hasInternet
+    }
+
+    /** keep track of finger index for maintenance */
     private var next: Int = 0
 
     companion object {
@@ -52,6 +68,7 @@ class Node {
     }
 
     private fun create() {
+        finger = Array(M){ Node() }
         predecessor = null
         successor = null
     }
@@ -148,6 +165,37 @@ class Node {
         Timber.d("chordId: %s", hash)
 
         return hash.toLong()
+    }
+
+    private fun getHasInternet(context: Context) : Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                true
+            }
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                true
+            }
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
+                true
+            }
+            else -> false
+        }
+    }
+
+//    fun toPrettyString() : String {
+//        var text = ""
+//
+//    }
+
+    override fun toString(): String {
+        var text = if(getHasInternet(MainApplication.applicationContext)) "1" else "0"
+        text += ":$nodeId"
+        Timber.d("Node toString: %s", text)
+        return text
     }
 }
 

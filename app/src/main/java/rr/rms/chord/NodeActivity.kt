@@ -9,14 +9,15 @@ import kotlinx.android.synthetic.main.activity_node.*
 import rr.rms.R
 import rr.rms.cache.Block
 import rr.rms.cache.BlockCache
-import rr.rms.cache.BlockCache.ImageCacheListener
+import rr.rms.cache.BlockCache.BlockCacheListener
+import rr.rms.cache.MetaDataCache
 import rr.rms.wifiaware.WifiAwareClient
 import timber.log.Timber
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
 
-class NodeActivity : AppCompatActivity() , ImageCacheListener{
+class NodeActivity : AppCompatActivity() , BlockCacheListener, MetaDataCache.MetaDataCacheListener{
 
     private lateinit var debugTextView: TextView
 
@@ -28,7 +29,7 @@ class NodeActivity : AppCompatActivity() , ImageCacheListener{
 
     private lateinit var subscribeKeyEdit: EditText
 
-    var syncTimer: Timer? = null
+    private var syncTimer: Timer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +44,7 @@ class NodeActivity : AppCompatActivity() , ImageCacheListener{
         cacheTextView.movementMethod = ScrollingMovementMethod()
 
         BlockCache.addCacheChangedListener(this)
+        MetaDataCache.addListener(this)
 
         addData.setOnClickListener {
             BlockCache.add(addKeyEdit.text.toString(), addValueEdit.text.toString())
@@ -96,6 +98,47 @@ class NodeActivity : AppCompatActivity() , ImageCacheListener{
 //            val wantKey = subscribeKeyEdit.text.toString()
 //            BlockCache.addWeWantKey(wantKey)
 //        }
+
+        subscribeOnBoarding.setOnClickListener {
+            WifiAwareClient.subscribe(this, MetaDataCache.ON_BOARDING_KEY, emptyList(),
+                object : WifiAwareClient.WifiAwareCallback {
+                    override fun onError(msg: String) {
+                        Timber.d("subscribeOnBoarding error %s", msg)
+                        debugTextView.append("subscribeOnBoarding error $msg\n")
+                    }
+
+                    override fun onSuccess(bytes: ByteArray) {
+                        Timber.d("subscribeOnBoarding success, received msg %s", String(bytes))
+                        debugTextView.append("subscribeOnBoarding received: ${String(bytes)}\n")
+                        MetaDataCache.parseAndUpdateCache(String(bytes))
+                    }
+                }
+            )
+        }
+
+        /**
+         *  Publish MetaDataCache which includes:
+         *  - my nodeId
+         *  - whether I have internet
+         *  - a list of nodeIds that I've talked to
+         *  onboarding info = "myNodeId:myHasInternet:nodeAId,nodeBId,..."
+         */
+        publishOnBoarding.setOnClickListener {
+            WifiAwareClient.publish(this, MetaDataCache.ON_BOARDING_KEY,
+                object : WifiAwareClient.WifiAwareCallback {
+                    override fun onError(msg: String) {
+                        Timber.d("publishOnBoarding error %s", msg)
+                        debugTextView.append("publishOnBoarding error $msg\n")
+                    }
+
+                    override fun onSuccess(bytes: ByteArray) {
+                        Timber.d("publishOnBoarding success, received msg %s", String(bytes))
+                        debugTextView.append("publishOnBoarding received: ${String(bytes)}\n")
+                    }
+                },
+                MetaDataCache.toString()
+            )
+        }
 
         /**
          * Syncs caches between devices
@@ -189,6 +232,10 @@ class NodeActivity : AppCompatActivity() , ImageCacheListener{
         newCache: MutableMap<String, Set<Block>>,
         othersKeys: MutableSet<String>
     ) {
-        cacheTextView.text = BlockCache.toString()
+        cacheTextView.text = BlockCache.toString() + "\n" + MetaDataCache.toString()
+    }
+
+    override fun onCacheChanged(newCache: MutableMap<String, Node>) {
+        cacheTextView.text = BlockCache.toString() + "\n" + MetaDataCache.toString()
     }
 }

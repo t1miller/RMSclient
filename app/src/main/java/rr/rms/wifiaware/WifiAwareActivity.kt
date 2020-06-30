@@ -32,7 +32,7 @@ import java.net.Socket
 
 
 class WifiAwareActivity : AppCompatActivity(),
-    BlockCache.ImageCacheListener,
+    BlockCache.BlockCacheListener,
     NodeRecyclerViewAdapter.NodeListCallback {
 
     private val PERMISSION_REQUEST_CODE = 101

@@ -11,7 +11,7 @@ import kotlin.random.Random
 
 object BlockCache {
 
-    interface ImageCacheListener {
+    interface BlockCacheListener {
         fun onCacheChanged(newCache: MutableMap<String, Set<Block>>,
                            othersKeys: MutableSet<String>)
     }
@@ -36,7 +36,7 @@ object BlockCache {
     private var othersKeys: MutableSet<String> = mutableSetOf()
 
     /** Observables who care, or maybe don't care, when the cache is updated */
-    private var cacheChangedListeners = mutableListOf<ImageCacheListener>()
+    private var cacheChangedListeners = mutableListOf<BlockCacheListener>()
 
     init {
         addRandomKeysToCache()
@@ -95,7 +95,7 @@ object BlockCache {
         add(USER_URL, stampedBlocks)
     }
 
-    fun addCacheChangedListener(listener: ImageCacheListener) {
+    fun addCacheChangedListener(listener: BlockCacheListener) {
         cacheChangedListeners.add(listener)
     }
 
@@ -110,12 +110,12 @@ object BlockCache {
      * @return all keys stored in this cache
      */
     fun getCacheMetaData() : String {
-        return cache.keys.joinToString { "$it@" } + ":" + othersKeys.joinToString { "$it@" }
+        return cache.keys.joinToString { it } + ":" + othersKeys.joinToString { it }
     }
 
     fun parseAndCacheMetadata(rawdata: String){
-        // parse data
-        othersKeys.addAll(rawdata.split("@"))
+        val (otherKeysList,_) = rawdata.split(":")
+        othersKeys.addAll(otherKeysList.split(", ").toMutableSet())
         notifyListeners()
     }
 
@@ -145,8 +145,29 @@ object BlockCache {
             "Lamb" to "says woof",
             "Clyde" to "says hello",
             "Kate" to "says hi",
-            "Trent" to "says hey"
-        ).toList()
+            "Trent" to "says hey",
+            "a" to "b",
+            "b" to "c",
+            "c" to "d",
+            "d" to "e",
+            "e" to "f",
+            "f" to "g",
+            "g" to "h",
+            "h" to "i",
+            "i" to "j",
+            "j" to "k",
+            "k" to "l",
+            "l" to "m",
+            "m" to "n",
+            "n" to "o",
+            "o" to "p",
+            "p" to "q",
+            "q" to "r",
+            "r" to "s",
+            "s" to "t",
+            "t" to "u",
+            "u" to "v"
+            ).toList()
 
         for(i in 0..2) {
             val randIdx = Random.nextInt(0,keyValues.size)
