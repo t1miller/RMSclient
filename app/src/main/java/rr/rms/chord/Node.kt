@@ -1,10 +1,7 @@
 package rr.rms.chord
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import rr.rms.MainApplication
 import rr.rms.cache.BlockCache
+import rr.rms.wifiaware.library.NetworkUtils
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -51,8 +48,7 @@ class Node {
 
     companion object {
         /**
-         *  P
-         *  arameter that controls hash table collision rate.
+         *  Parameter that controls hash table collision rate.
          *  Max Network size is 2^M
          */
         const val M = 20
@@ -167,32 +163,9 @@ class Node {
         return hash.toLong()
     }
 
-    private fun getHasInternet(context: Context) : Boolean {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        return when {
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
-                true
-            }
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
-                true
-            }
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
-                true
-            }
-            else -> false
-        }
-    }
-
-//    fun toPrettyString() : String {
-//        var text = ""
-//
-//    }
 
     override fun toString(): String {
-        var text = if(getHasInternet(MainApplication.applicationContext)) "1" else "0"
+        var text = if(NetworkUtils.hasInternet()) "1" else "0"
         text += ":$nodeId"
         Timber.d("Node toString: %s", text)
         return text

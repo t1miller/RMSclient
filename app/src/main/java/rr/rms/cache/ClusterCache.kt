@@ -4,25 +4,22 @@ import rr.rms.chord.Node
 import timber.log.Timber
 
 
-object MetaDataCache {
+object ClusterCache {
 
     interface MetaDataCacheListener {
         fun onCacheChanged(newCache: MutableMap<String, Node>)
     }
 
     const val ON_BOARDING_KEY = "onBoarding"
-
-    private val nodeMetadataCache = mutableMapOf<String, Node>()
-
+    private val nodeCache = mutableMapOf<String, Node>()
     private val cacheChangedListeners = mutableListOf<MetaDataCacheListener>()
-
-    private val me: Node? = Node()
+    private val me: Node = Node()
 
     fun add(id: String, node: Node?) {
         if(node == null){
             return
         }
-        nodeMetadataCache[id] = node
+        nodeCache[id] = node
         notifyListeners()
     }
 
@@ -55,20 +52,13 @@ object MetaDataCache {
 
     private fun notifyListeners() {
         cacheChangedListeners.onEach {
-            it.onCacheChanged(nodeMetadataCache)
+            it.onCacheChanged(nodeCache)
         }
     }
 
-//    fun toPrettyString() : String {
-//        var text = "MetaDataCache\n\n"
-//        nodeMetadataCache.forEach { key, value ->
-//            text += "key: $key value"
-//        }
-//    }
-
     override fun toString() : String {
-        var text = me.toString() + ":"
-        text += nodeMetadataCache.keys.joinToString(separator = ",")
+        var text = "$me:"
+        text += nodeCache.keys.joinToString(separator = ",")
         Timber.d("MetaDataCache toString: %s", text)
         return text
     }
@@ -78,20 +68,20 @@ object MetaDataCache {
         var listNodeIds = nodeIds.split(",")
         val boolHasInternet = (hasInternet == "1")
 
-        if(nodeMetadataCache[nodeId] == null){
+        if(nodeCache[nodeId] == null){
             add(nodeId, Node(boolHasInternet, nodeId.toLong()))
-            Timber.d("nodeMetadataCache adding node to cache %s", nodeMetadataCache[nodeId].toString())
+            Timber.d("nodeMetadataCache adding node to cache %s", nodeCache[nodeId].toString())
         } else {
-            val existingNode = nodeMetadataCache[nodeId]
+            val existingNode = nodeCache[nodeId]
             existingNode?.hasInternet = boolHasInternet
             add(nodeId, existingNode)
-            Timber.d("nodeMetadataCache updating existing cache %s", nodeMetadataCache[nodeId].toString())
+            Timber.d("nodeMetadataCache updating existing cache %s", nodeCache[nodeId].toString())
         }
 
         listNodeIds = listNodeIds.filter { item -> (item) != "" }
         for (id in listNodeIds){
             Timber.d("id = %s", id)
-            val oNode = nodeMetadataCache[id]
+            val oNode = nodeCache[id]
             if (oNode == null) {
                 add(id, Node(null, id.toLong()))
             }

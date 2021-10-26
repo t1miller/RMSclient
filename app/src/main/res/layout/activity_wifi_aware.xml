@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+    <ScrollView
+            android:focusable="true"
+            android:id="@+id/scrollview"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                    android:textColor="#FF0000"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/log_textview"
+                    app:layout_constraintTop_toBottomOf="@+id/broadcast_button"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="8dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+            android:text="Save Logs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/saveLogsButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+            android:text="Share Logs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/shareLogsButton"
+            app:layout_constraintTop_toBottomOf="@+id/saveLogsButton"
+            app:layout_constraintEnd_toEndOf="@+id/saveLogsButton"
+            app:layout_constraintStart_toStartOf="@+id/saveLogsButton" />
+
+    <Button
+            android:text="Clear Logs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/clearLogsButton"
+            app:layout_constraintStart_toStartOf="@+id/shareLogsButton"
+            app:layout_constraintEnd_toEndOf="@+id/shareLogsButton"
+            app:layout_constraintTop_toBottomOf="@+id/shareLogsButton" />
+
+    <Button
+            android:text="Stop Wifi Aware Service"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/stopServiceButton"
+            app:layout_constraintTop_toBottomOf="@+id/clearLogsButton"
+            app:layout_constraintEnd_toEndOf="@+id/clearLogsButton"
+            app:layout_constraintStart_toStartOf="@+id/clearLogsButton" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

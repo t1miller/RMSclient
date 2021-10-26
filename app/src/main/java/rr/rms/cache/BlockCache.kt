@@ -12,14 +12,11 @@ import kotlin.random.Random
 object BlockCache {
 
     interface BlockCacheListener {
-        fun onCacheChanged(newCache: MutableMap<String, Set<Block>>,
-                           othersKeys: MutableSet<String>)
+        fun onCacheChanged(newCache: MutableMap<String, Set<Block>>, othersKeys: MutableSet<String>)
     }
 
     object Keys {
-
         const val KEY_LIST_URL = "keyList"
-
         const val GENERIC_URL = "user.grateful.quesadilla.8008"
 
         /** Mr. Quesadilla serves orange sunshine */

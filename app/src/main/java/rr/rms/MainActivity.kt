@@ -12,14 +12,11 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import rr.rms.chord.NodeActivity
 import rr.rms.wifiaware.WifiAwareActivity
-import timber.log.Timber
-import timber.log.Timber.plant
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        plant(Timber.DebugTree())
         setContentView(R.layout.activity_main)
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
@@ -72,10 +69,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val intent = Intent(this, NodeActivity::class.java)
                 startActivity(intent)
             }
+            R.id.networkLibraryActivity -> {
+//                val intent = Intent(this, NetworkLibraryActivity::class.java)
+//                startActivity(intent)
+            }
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
-
 }

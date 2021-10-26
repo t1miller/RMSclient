@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_nodesignature.view.*
 import rr.rms.R
 
 
@@ -16,20 +15,16 @@ class NodeRecyclerViewAdapter(
     private val mListener: NodeListCallback? ) : RecyclerView.Adapter<NodeRecyclerViewAdapter.ViewHolder>() {
 
     /***/
-    private val mOnClickListener: View.OnClickListener
+    private val mOnClickListener: View.OnClickListener = View.OnClickListener { v ->
+        val item = v.tag as NodeDataItem
+        mListener?.onNodeClicked(item)
+    }
 
     /***/
     interface NodeListCallback {
         fun onNodeClicked(item: NodeDataItem?)
     }
 
-
-    init {
-        mOnClickListener = View.OnClickListener { v ->
-            val item = v.tag as NodeDataItem
-            mListener?.onNodeClicked(item)
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -54,8 +49,8 @@ class NodeRecyclerViewAdapter(
     override fun getItemCount(): Int = mValues.size
 
     inner class ViewHolder(val mView: View) : RecyclerView.ViewHolder(mView) {
-        val mNodeId: TextView = mView.node_id
-        var mNodeImage: ImageView = mView.signature
+        val mNodeId: TextView = mView.findViewById(R.id.node_id)
+        var mNodeImage: ImageView = mView.findViewById(R.id.signature)
         override fun toString(): String {
             return super.toString() + " '" + mNodeId.text + "'"
         }

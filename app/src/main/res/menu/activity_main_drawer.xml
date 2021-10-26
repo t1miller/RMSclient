@@ -4,10 +4,6 @@
       tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
-        <!--<item-->
-                <!--android:id="@+id/chat"-->
-                <!--android:icon="@drawable/chat_bubble"-->
-                <!--android:title="@string/menu_chat"/>-->
         <item
                 android:id="@+id/wifiaware"
                 android:icon="@drawable/cell_wifi"
@@ -17,6 +13,11 @@
                 android:id="@+id/node"
                 android:icon="@drawable/cell_wifi"
                 android:title="Chord Test"/>
+
+        <item
+                android:id="@+id/networkLibraryActivity"
+                android:icon="@drawable/cell_wifi"
+                android:title="Network Library Test"/>
     </group>
 
 </menu>

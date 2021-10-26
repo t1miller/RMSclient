@@ -5,7 +5,10 @@ import android.content.Context
 /**
  * Request data structure
  */
-data class ChordRequestData(val src: Node, val dst: Node, val msg: String, val type: ChordRequestTypes)
+data class ChordRequestData(val src: Node,
+                            val dst: Node,
+                            val msg: String,
+                            val type: ChordRequestTypes)
 
 /**
  * Preferred transport method
