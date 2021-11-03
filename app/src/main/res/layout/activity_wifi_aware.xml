@@ -11,11 +11,12 @@
             android:focusable="true"
             android:id="@+id/scrollview"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="400dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton">
+            app:layout_constraintTop_toBottomOf="@+id/closeSessionButton">
 
         <LinearLayout
                 android:layout_width="match_parent"
@@ -38,7 +39,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/saveLogsButton"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -47,18 +47,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/shareLogsButton"
-            app:layout_constraintTop_toBottomOf="@+id/saveLogsButton"
-            app:layout_constraintEnd_toEndOf="@+id/saveLogsButton"
-            app:layout_constraintStart_toStartOf="@+id/saveLogsButton" />
+            app:layout_constraintStart_toEndOf="@+id/saveLogsButton"
+            app:layout_constraintTop_toTopOf="@+id/saveLogsButton" />
 
     <Button
             android:text="Clear Logs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/clearLogsButton"
-            app:layout_constraintStart_toStartOf="@+id/shareLogsButton"
-            app:layout_constraintEnd_toEndOf="@+id/shareLogsButton"
-            app:layout_constraintTop_toBottomOf="@+id/shareLogsButton" />
+            app:layout_constraintStart_toEndOf="@+id/shareLogsButton"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <Button
             android:text="Stop Wifi Aware Service"
@@ -67,7 +65,47 @@
             android:id="@+id/stopServiceButton"
             app:layout_constraintTop_toBottomOf="@+id/clearLogsButton"
             app:layout_constraintEnd_toEndOf="@+id/clearLogsButton"
-            app:layout_constraintStart_toStartOf="@+id/clearLogsButton" />
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+            android:text="Server"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/serverButton"
+            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton"
+            app:layout_constraintStart_toStartOf="@+id/scrollview" />
+
+    <Button
+            android:text="Subscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/subscribeButton"
+            app:layout_constraintStart_toEndOf="@+id/serverButton"
+            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
+
+    <Button
+            android:text="Publish"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/publishButton"
+            app:layout_constraintStart_toEndOf="@+id/subscribeButton"
+            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
+
+    <Button
+            android:text="Client"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/clientButton"
+            app:layout_constraintStart_toEndOf="@+id/publishButton"
+            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
+
+    <Button
+            android:text="Close Session"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/closeSessionButton"
+            app:layout_constraintTop_toBottomOf="@+id/serverButton"
+            app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

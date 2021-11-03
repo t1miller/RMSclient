@@ -13,9 +13,11 @@ object NetworkUtils {
 
     fun getAPort() : Int {
         val ss = ServerSocket(0)
+        Timber.d("getAPort() port = ${ss.localPort}")
         return ss.localPort
     }
 
+    // todo writ ebetter
     fun receiveBytes(socket: Socket?) : ByteArray{
         if(socket == null){
             Timber.e("socket null cant receiveBytes()")
@@ -29,6 +31,7 @@ object NetworkUtils {
         return bytesRead ?: ByteArray(0)
     }
 
+    // todo writ ebetter
     fun sendBytes(socket: Socket?, byteArray: ByteArray) {
         if(socket == null){
             Timber.e("socket null cant sendBytes()")

@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -21,8 +22,11 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
 
 //    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
 //        override fun onReceive(context: Context, intent: Intent) {
-////            appendToUiLog("Wifi Aware is ${WifiAwareUtils.isAvailable(context)}")
-//            // todo shouldnt publish subscribe logic go in here, when the hardware is available?
+//            if(WifiAwareUtils.isAvailable(applicationContext)){
+//                WifiAwareForegroundService.startService(applicationContext)
+//            } else {
+//                Timber.e("wifi aware still not available")
+//            }
 //        }
 //    }
 
@@ -52,24 +56,52 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
             WifiAwareForegroundService.stopService(this)
         }
 
+        val startServerButton = findViewById<Button>(R.id.serverButton)
+        startServerButton.setOnClickListener {
+            WifiAwareForegroundService.startServer()
+        }
+
+        val startClientButton = findViewById<Button>(R.id.clientButton)
+        startClientButton.setOnClickListener {
+            WifiAwareForegroundService.startClient()
+        }
+
+        val startSubscriberButton = findViewById<Button>(R.id.subscribeButton)
+        startSubscriberButton.setOnClickListener {
+            WifiAwareForegroundService.startSubscribing()
+        }
+
+        val startPublisherButton = findViewById<Button>(R.id.publishButton)
+        startPublisherButton.setOnClickListener {
+            WifiAwareForegroundService.startPublishing()
+        }
+
+        val closeSessionButton = findViewById<Button>(R.id.closeSessionButton)
+        closeSessionButton.setOnClickListener {
+            WifiAwareForegroundService.closeSession()
+        }
 
         // permission check
         setupPermissions()
+
+//        registerReceiver(receiver, IntentFilter(WifiAwareManager.ACTION_WIFI_AWARE_STATE_CHANGED))
+
+        // check wifi hardware
+        if(WifiAwareUtils.isAvailable(this)) {
+            Toast.makeText(this, "error, no wifi aware service", Toast.LENGTH_LONG).show()
+            Timber.e("error no wifi aware service")
+        }
 
         WifiAwareForegroundService.startService(this)
 
         Logger.addListener(this)
     }
 
-    override fun onPause() {
-        super.onPause()
-//        unregisterReceiver(receiver)
-    }
 
-    override fun onResume() {
-        super.onResume()
-//        registerReceiver(receiver, IntentFilter(WifiAwareManager.ACTION_WIFI_AWARE_STATE_CHANGED))
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        unregisterReceiver(receiver)
+//    }
 
     private fun setupPermissions() {
         val permissionFine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -100,6 +132,8 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
     }
 
     override fun onLogAdded(log: Logger.Log) {
-        logTextView.append("$log\n")
+        runOnUiThread {
+            logTextView.append("$log\n")
+        }
     }
 }
