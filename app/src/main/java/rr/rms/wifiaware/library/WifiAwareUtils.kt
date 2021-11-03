@@ -28,7 +28,6 @@ object WifiAwareUtils {
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI_AWARE)
             .setNetworkSpecifier(networkRequest)
             .build()
-
     }
 
     fun buildSubscriberNetworkRequest(discoverySession: DiscoverySession?, peerHandle: PeerHandle?): NetworkRequest? {

@@ -7,13 +7,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rr.rms.MainApplication
 import timber.log.Timber
+import java.net.ServerSocket
 import java.net.Socket
 
 /**
  * Singleton which manages wifi-aware interactions:
  * session, publish, subscribe, socket
  */
-// todo handle contexts better
 object WifiAwareClient {
 
     interface SubscribeCallback {
@@ -46,7 +46,6 @@ object WifiAwareClient {
     var subscribeSession: SubscribeDiscoverySession? = null
     var publishPeerHandle: PeerHandle? = null
     var subscribePeerHandle: PeerHandle? = null
-    var port = NetworkUtils.getAPort()
 
     /**
      * Get an aware session
@@ -219,8 +218,14 @@ object WifiAwareClient {
             Timber.d("setting up network socket")
 
             val connectManager = MainApplication.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val networkRequest = if(isServer) WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, port)
-                                         else WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
+            val networkRequest: NetworkRequest? = if(isServer) {
+                val ss = ServerSocket(0)
+                Timber.d("server socket created, port ${ss.localPort}")
+                WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, ss.localPort)
+            } else {
+                WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
+            }
+
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     Timber.d("socket onAvailable()")
@@ -239,9 +244,10 @@ object WifiAwareClient {
 
                     val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
                     val peerIpv6 = peerAwareInfo.peerIpv6Addr
-                    val peerPort = peerAwareInfo.port
+                    var peerPort = peerAwareInfo.port
 
                     Timber.d("socket: port = $peerPort ipv6 = $peerIpv6")
+
                     val socket = network.socketFactory.createSocket(peerIpv6, peerPort)
                     socketCallback.onResponse(socket)
                 }
@@ -250,8 +256,10 @@ object WifiAwareClient {
                     Timber.e("socket onLost()")
                 }
             }
+
             // todo when done with netowrk call unregisterNetworkCallback
             if (networkRequest != null){
+                Timber.d("network request sent")
                 connectManager.requestNetwork(networkRequest, callback)
             }
         }

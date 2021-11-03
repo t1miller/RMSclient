@@ -97,7 +97,6 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
         Logger.addListener(this)
     }
 
-
 //    override fun onDestroy() {
 //        super.onDestroy()
 //        unregisterReceiver(receiver)

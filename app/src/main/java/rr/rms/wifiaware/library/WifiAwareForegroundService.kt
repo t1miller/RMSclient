@@ -19,7 +19,6 @@ import rr.rms.R
 import rr.rms.wifiaware.WifiAwareActivity
 import rr.rms.wifiaware.library.test.MessageUtils
 import timber.log.Timber
-import java.net.Socket
 
 class WifiAwareForegroundService: Service() {
 
@@ -155,7 +154,6 @@ class WifiAwareForegroundService: Service() {
 
     private fun startPublishing() {
         WifiAwareClient.publish("rms", "i am the publisher", object : WifiAwareClient.PublishCallback{
-
             override fun onMessageReceived(
                 publishDiscoverySession: PublishDiscoverySession?,
                 peerHandle: PeerHandle?,
