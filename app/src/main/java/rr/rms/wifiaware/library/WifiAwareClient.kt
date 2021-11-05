@@ -17,13 +17,11 @@ import java.net.Socket
 object WifiAwareClient {
 
     interface SubscribeCallback {
-        fun onMessageReceived(subscribeDiscoverySession: SubscribeDiscoverySession?, peerHandle: PeerHandle?, msgRcvd: ByteArray)
         fun onMessageSent(msgSent: String)
         fun onError(msg: String)
     }
 
     interface PublishCallback {
-        fun onMessageReceived(publishDiscoverySession: PublishDiscoverySession?, peerHandle: PeerHandle?, msgRcvd: ByteArray)
         fun onMessageSent(msgSent: String)
         fun onError(msg: String)
     }
@@ -33,8 +31,12 @@ object WifiAwareClient {
         fun onError(msg: String)
     }
 
-    interface DataCallback {
-        fun onSuccess(data: ByteArray)
+    interface RcvDataCallback {
+        fun onSuccess(dataRcvd: ByteArray)
+    }
+
+    interface SendDataCallback {
+        fun onSuccess()
     }
 
     interface SocketCallback {
@@ -46,6 +48,7 @@ object WifiAwareClient {
     var subscribeSession: SubscribeDiscoverySession? = null
     var publishPeerHandle: PeerHandle? = null
     var subscribePeerHandle: PeerHandle? = null
+    lateinit var serverSocket: ServerSocket
 
     /**
      * Get an aware session
@@ -114,7 +117,6 @@ object WifiAwareClient {
                             subscribePeerHandle = peerHandle
                             publishSession?.sendMessage(peerHandle, 0, msg.toByteArray())
                             Logger.log(Logger.ACTIONS.PUBLISH_MSG, Logger.me(), String(message), String(message))
-                            callback?.onMessageReceived(publishSession, peerHandle, message)
                         }
 
                         override fun onMessageSendFailed(messageId: Int) {
@@ -164,7 +166,6 @@ object WifiAwareClient {
                         override fun onMessageReceived(peerHandle: PeerHandle, message: ByteArray) {
                             Timber.d("Subscriber sent msg: %s", String(message))
                             Logger.log(Logger.ACTIONS.SUBSCRIBE_MSG_MSG, Logger.me(), String(message), String(message))
-                            callback?.onMessageReceived(subscribeSession, peerHandle, message)
                         }
 
                         override fun onSubscribeStarted(session: SubscribeDiscoverySession) {
@@ -196,15 +197,16 @@ object WifiAwareClient {
         })
     }
 
-    suspend fun sendData(data: ByteArray) {
+    suspend fun sendData(data: ByteArray, dataCallback: SendDataCallback) {
         getSocket(true, object : SocketCallback{
             override fun onResponse(socket: Socket?) {
                 NetworkUtils.sendBytes(socket, data)
+                dataCallback.onSuccess()
             }
         })
     }
 
-    suspend fun receiveData(dataCallback: DataCallback) {
+    suspend fun receiveData(dataCallback: RcvDataCallback) {
         getSocket(false, object : SocketCallback{
             override fun onResponse(socket: Socket?) {
                 val data = NetworkUtils.receiveBytes(socket)
@@ -219,9 +221,9 @@ object WifiAwareClient {
 
             val connectManager = MainApplication.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkRequest: NetworkRequest? = if(isServer) {
-                val ss = ServerSocket(0)
-                Timber.d("server socket created, port ${ss.localPort}")
-                WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, ss.localPort)
+                serverSocket = ServerSocket(0)
+                Timber.d("server socket created, port ${serverSocket.localPort}")
+                WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, serverSocket.localPort)
             } else {
                 WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
             }
@@ -244,12 +246,17 @@ object WifiAwareClient {
 
                     val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
                     val peerIpv6 = peerAwareInfo.peerIpv6Addr
-                    var peerPort = peerAwareInfo.port
+                    val peerPort = peerAwareInfo.port
 
-                    Timber.d("socket: port = $peerPort ipv6 = $peerIpv6")
+                    Timber.d("socket: port used = $peerPort peerIpv6 = $peerIpv6 peerPort = ${peerAwareInfo.port}")
 
-                    val socket = network.socketFactory.createSocket(peerIpv6, peerPort)
-                    socketCallback.onResponse(socket)
+                    if(isServer){
+                        val socket = serverSocket.accept()
+                        socketCallback.onResponse(socket)
+                    } else {
+                        val socket = network.socketFactory.createSocket(peerIpv6, peerPort)
+                        socketCallback.onResponse(socket)
+                    }
                 }
 
                 override fun onLost(network: Network) {

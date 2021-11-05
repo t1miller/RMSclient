@@ -11,12 +11,6 @@ import kotlin.system.measureTimeMillis
 
 object NetworkUtils {
 
-//    fun getAPort() : Int {
-//        val ss = ServerSocket(0)
-//        Timber.d("getAPort() port = ${ss.localPort}")
-//        return ss.localPort
-//    }
-
     // todo writ ebetter
     fun receiveBytes(socket: Socket?) : ByteArray{
         if(socket == null){
