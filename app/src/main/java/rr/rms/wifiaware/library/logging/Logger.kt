@@ -1,4 +1,4 @@
-package rr.rms.wifiaware.library
+package rr.rms.wifiaware.library.logging
 
 import android.app.Activity
 import android.content.Intent
@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import rr.rms.BuildConfig
 import rr.rms.MainApplication
+import rr.rms.wifiaware.library.aware.WifiAwareUtils
 import timber.log.Timber
 import java.io.File
 import java.lang.Exception
@@ -48,7 +49,7 @@ object Logger {
     )
 
     fun addListener(callback: LoggerCallback) {
-        this.callback = callback
+        Logger.callback = callback
     }
 
     fun log(action: ACTIONS, src: String, dst: String, payload: String) {

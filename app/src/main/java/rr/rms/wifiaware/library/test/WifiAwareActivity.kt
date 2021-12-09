@@ -1,17 +1,15 @@
-package rr.rms.wifiaware
+package rr.rms.wifiaware.library.test
 
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import rr.rms.R
 import rr.rms.wifiaware.library.*
+import rr.rms.wifiaware.library.aware.WifiAwareUtils
+import rr.rms.wifiaware.library.logging.Logger
 import timber.log.Timber
 
 
@@ -56,33 +54,33 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
             WifiAwareForegroundService.stopService(this)
         }
 
-        val startServerButton = findViewById<Button>(R.id.serverButton)
-        startServerButton.setOnClickListener {
-            WifiAwareForegroundService.startServer()
-        }
-
-        val startClientButton = findViewById<Button>(R.id.clientButton)
-        startClientButton.setOnClickListener {
-            WifiAwareForegroundService.startClient()
-        }
-
-        val startSubscriberButton = findViewById<Button>(R.id.subscribeButton)
-        startSubscriberButton.setOnClickListener {
-            WifiAwareForegroundService.startSubscribing()
-        }
-
-        val startPublisherButton = findViewById<Button>(R.id.publishButton)
-        startPublisherButton.setOnClickListener {
-            WifiAwareForegroundService.startPublishing()
-        }
-
-        val closeSessionButton = findViewById<Button>(R.id.closeSessionButton)
-        closeSessionButton.setOnClickListener {
-            WifiAwareForegroundService.closeSession()
-        }
+//        val startServerButton = findViewById<Button>(R.id.serverButton)
+//        startServerButton.setOnClickListener {
+//            WifiAwareForegroundService.startServer()
+//        }
+//
+//        val startClientButton = findViewById<Button>(R.id.clientButton)
+//        startClientButton.setOnClickListener {
+//            WifiAwareForegroundService.startClient()
+//        }
+//
+//        val startSubscriberButton = findViewById<Button>(R.id.subscribeButton)
+//        startSubscriberButton.setOnClickListener {
+//            WifiAwareForegroundService.startSubscribing()
+//        }
+//
+//        val startPublisherButton = findViewById<Button>(R.id.publishButton)
+//        startPublisherButton.setOnClickListener {
+//            WifiAwareForegroundService.startPublishing()
+//        }
+//
+//        val closeSessionButton = findViewById<Button>(R.id.closeSessionButton)
+//        closeSessionButton.setOnClickListener {
+//            WifiAwareForegroundService.closeSession()
+//        }
 
         // permission check
-        setupPermissions()
+        WifiAwareUtils.setupPermissions(PERMISSION_REQUEST_CODE, this)
 
 //        registerReceiver(receiver, IntentFilter(WifiAwareManager.ACTION_WIFI_AWARE_STATE_CHANGED))
 
@@ -102,21 +100,21 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
 //        unregisterReceiver(receiver)
 //    }
 
-    private fun setupPermissions() {
-        val permissionFine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-        if (permissionFine != PackageManager.PERMISSION_GRANTED){
-            Timber.d("need to ask user for permission")
-            showPermissionDialog()
-        }
-    }
-
-    private fun showPermissionDialog() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            PERMISSION_REQUEST_CODE
-        )
-    }
+//    private fun setupPermissions() {
+//        val permissionFine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//        if (permissionFine != PackageManager.PERMISSION_GRANTED){
+//            Timber.d("need to ask user for permission")
+//            showPermissionDialog()
+//        }
+//    }
+//
+//    private fun showPermissionDialog() {
+//        ActivityCompat.requestPermissions(
+//            this,
+//            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+//            PERMISSION_REQUEST_CODE
+//        )
+//    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

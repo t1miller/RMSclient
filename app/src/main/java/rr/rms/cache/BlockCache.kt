@@ -1,13 +1,17 @@
 package rr.rms.cache
 
 import android.content.Context
+import android.graphics.Bitmap
 import rr.rms.cache.BlockCache.Keys.DEFAULT_USER_IMAGE
 import rr.rms.cache.BlockCache.Keys.USER_URL
-import rr.rms.ui.wifiaware.NodeDataItem
 import rr.rms.utils.ResourceManagerUtils
 import timber.log.Timber
 import kotlin.random.Random
 
+
+data class NodeDataItem(val node_id: String,
+                        val bitmap: Bitmap
+)
 
 object BlockCache {
 

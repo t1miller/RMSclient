@@ -1,11 +1,10 @@
-package rr.rms.wifiaware.library
+package rr.rms.wifiaware.library.net
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import rr.rms.MainApplication
 import timber.log.Timber
-import java.net.ServerSocket
 import java.net.Socket
 import kotlin.system.measureTimeMillis
 

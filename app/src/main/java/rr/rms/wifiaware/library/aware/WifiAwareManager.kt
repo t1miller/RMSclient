@@ -1,46 +1,40 @@
-package rr.rms.wifiaware.library
+package rr.rms.wifiaware.library.aware
 
 import android.content.Context
 import android.net.*
 import android.net.wifi.aware.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import android.net.wifi.aware.WifiAwareManager
 import rr.rms.MainApplication
+import rr.rms.wifiaware.library.logging.Logger
 import timber.log.Timber
 import java.net.ServerSocket
 import java.net.Socket
 
 /**
  * Singleton which manages wifi-aware interactions:
- * session, publish, subscribe, socket
+ * session, publish, subscribe, socket, send data, receive data
  */
-object WifiAwareClient {
-
-    interface SubscribeCallback {
-        fun onMessageSent(msgSent: String)
-        fun onError(msg: String)
-    }
-
-    interface PublishCallback {
-        fun onMessageSent(msgSent: String)
-        fun onError(msg: String)
-    }
+object WifiAwareManager {
 
     interface SessionCallback {
         fun onSuccess(session: WifiAwareSession?)
         fun onError(msg: String)
     }
 
-    interface RcvDataCallback {
-        fun onSuccess(dataRcvd: ByteArray)
-    }
-
-    interface SendDataCallback {
-        fun onSuccess()
-    }
-
     interface SocketCallback {
         fun onResponse(socket: Socket?)
+    }
+
+    interface SubscribeCallback {
+        fun onMessageSent(msgSent: String)
+        fun onClientSocket(socket: Socket?)
+        fun onError(msg: String)
+    }
+
+    interface PublishCallback {
+        fun onMessageSent(msgSent: String)
+        fun onServerSocket(socket: Socket?)
+        fun onError(msg: String)
     }
 
     var session: WifiAwareSession? = null
@@ -93,9 +87,8 @@ object WifiAwareClient {
      * Publish to a url service
      * @param url The url to publish
      * @param msg The message sent to the subscriber if they send us a message
-     * @param callback To no
      */
-    fun publish(url: String, msg: String, callback: PublishCallback?){
+    fun publish(url: String, msg: String, callbackPublish: PublishCallback){
         getSession(object : SessionCallback {
             override fun onSuccess(session: WifiAwareSession?) {
                 session?.publish(
@@ -116,18 +109,25 @@ object WifiAwareClient {
                             Timber.d("Subscriber sent us Publishing url")
                             subscribePeerHandle = peerHandle
                             publishSession?.sendMessage(peerHandle, 0, msg.toByteArray())
+
+                            getSocket(true, object: SocketCallback{
+                                override fun onResponse(socket: Socket?) {
+                                    callbackPublish.onServerSocket(socket)
+                                }
+                            })
+
                             Logger.log(Logger.ACTIONS.PUBLISH_MSG, Logger.me(), String(message), String(message))
                         }
 
                         override fun onMessageSendFailed(messageId: Int) {
                             Timber.d("message send failed")
-                            callback?.onError("message send failed")
+                            callbackPublish.onError("message send failed")
                         }
 
                         override fun onMessageSendSucceeded(messageId: Int) {
                             Timber.d("message send succeeded")
                             Logger.log(Logger.ACTIONS.PUBLISH_MSG_MSG, Logger.me(), msg, msg)
-                            callback?.onMessageSent(msg)
+                            callbackPublish.onMessageSent(msg)
                         }
                     },
                     null
@@ -146,8 +146,7 @@ object WifiAwareClient {
      * @param url The url subscribing to
      * @param callback WifiAwareCallback to notify user of events
      */
-    fun subscribe(url: String, urls: List<String>, msg: String, callback: SubscribeCallback?){
-        Timber.d("Subscribing to url: %s", url)
+    fun subscribe(url: String, urls: List<String>, msg: String, callbackSubscribe: SubscribeCallback?){
         getSession(object : SessionCallback {
             override fun onSuccess(session: WifiAwareSession?) {
                 session?.subscribe(
@@ -160,12 +159,18 @@ object WifiAwareClient {
 
                         override fun onMessageSendFailed(messageId: Int) {
                             Timber.d("Message send failed")
-                            callback?.onError("message send failed")
+                            callbackSubscribe?.onError("message send failed")
                         }
 
                         override fun onMessageReceived(peerHandle: PeerHandle, message: ByteArray) {
                             Timber.d("Subscriber sent msg: %s", String(message))
                             Logger.log(Logger.ACTIONS.SUBSCRIBE_MSG_MSG, Logger.me(), String(message), String(message))
+
+                            getSocket(false, object: SocketCallback{
+                                override fun onResponse(socket: Socket?) {
+                                    callbackSubscribe?.onClientSocket(socket)
+                                }
+                            })
                         }
 
                         override fun onSubscribeStarted(session: SubscribeDiscoverySession) {
@@ -184,7 +189,7 @@ object WifiAwareClient {
                             Timber.d("Subscriber service discovered, service name = %s, sending msg = %s", srcId, msg)
                             subscribeSession?.sendMessage(peerHandle, 0, msg.toByteArray())
                             Logger.log(Logger.ACTIONS.SUBSCRIBE_MSG, Logger.me(), srcId, msg)
-                            callback?.onMessageSent(msg)
+                            callbackSubscribe?.onMessageSent(msg)
                         }
                     },
                     null
@@ -195,80 +200,65 @@ object WifiAwareClient {
                 Timber.d("error getting session")
             }
         })
+        Timber.d("Subscribing to url: %s", url)
     }
 
-    suspend fun sendData(data: ByteArray, dataCallback: SendDataCallback) {
-        getSocket(true, object : SocketCallback{
-            override fun onResponse(socket: Socket?) {
-                NetworkUtils.sendBytes(socket, data)
-                dataCallback.onSuccess()
-            }
-        })
-    }
+    private fun getSocket(isServer: Boolean, socketCallback: SocketCallback) {
+        Timber.d("setting up network socket")
 
-    suspend fun receiveData(dataCallback: RcvDataCallback) {
-        getSocket(false, object : SocketCallback{
-            override fun onResponse(socket: Socket?) {
-                val data = NetworkUtils.receiveBytes(socket)
-                dataCallback.onSuccess(data)
-            }
-        })
-    }
+        val connectManager = MainApplication.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkRequest: NetworkRequest? = if(isServer) {
+            serverSocket = ServerSocket(0)
+            Timber.d("server socket created, port ${serverSocket.localPort}")
+            WifiAwareUtils.buildPublisherNetworkRequest(
+                publishSession,
+                subscribePeerHandle,
+                serverSocket.localPort
+            )
+        } else {
+            WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
+        }
 
-    private suspend fun getSocket(isServer: Boolean, socketCallback: SocketCallback) {
-        withContext(Dispatchers.IO){
-            Timber.d("setting up network socket")
-
-            val connectManager = MainApplication.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val networkRequest: NetworkRequest? = if(isServer) {
-                serverSocket = ServerSocket(0)
-                Timber.d("server socket created, port ${serverSocket.localPort}")
-                WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, serverSocket.localPort)
-            } else {
-                WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                Timber.d("socket onAvailable()")
             }
 
-            val callback = object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) {
-                    Timber.d("socket onAvailable()")
-                }
+            override fun onUnavailable() {
+                Timber.e("socket unavailable")
+            }
 
-                override fun onUnavailable() {
-                    Timber.e("socket unavailable")
-                }
+            override fun onLosing(network: Network, maxMsToLive: Int) {
+                Timber.e("socket losing()")
+            }
 
-                override fun onLosing(network: Network, maxMsToLive: Int) {
-                    Timber.e("socket losing()")
-                }
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                Timber.d("socket onCapabilitiesChanged()")
 
-                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                    Timber.d("socket onCapabilitiesChanged()")
+                val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
+                val peerIpv6 = peerAwareInfo.peerIpv6Addr
+                val peerPort = peerAwareInfo.port
 
-                    val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
-                    val peerIpv6 = peerAwareInfo.peerIpv6Addr
-                    val peerPort = peerAwareInfo.port
+                Timber.d("socket: port used = $peerPort peerIpv6 = $peerIpv6 peerPort = ${peerAwareInfo.port}")
 
-                    Timber.d("socket: port used = $peerPort peerIpv6 = $peerIpv6 peerPort = ${peerAwareInfo.port}")
-
-                    if(isServer){
-                        val socket = serverSocket.accept()
-                        socketCallback.onResponse(socket)
-                    } else {
-                        val socket = network.socketFactory.createSocket(peerIpv6, peerPort)
-                        socketCallback.onResponse(socket)
-                    }
-                }
-
-                override fun onLost(network: Network) {
-                    Timber.e("socket onLost()")
+                if(isServer){
+                    val socket = serverSocket.accept()
+                    socketCallback.onResponse(socket)
+                } else {
+                    val socket = network.socketFactory.createSocket(peerIpv6, peerPort)
+                    socketCallback.onResponse(socket)
                 }
             }
 
-            // todo when done with netowrk call unregisterNetworkCallback
-            if (networkRequest != null){
-                Timber.d("network request sent")
-                connectManager.requestNetwork(networkRequest, callback)
+            override fun onLost(network: Network) {
+                Timber.e("socket onLost()")
             }
+        }
+
+        // todo when done with netowrk call unregisterNetworkCallback
+        if (networkRequest != null){
+            Timber.d("network request sent")
+            connectManager.requestNetwork(networkRequest, callback)
         }
     }
 

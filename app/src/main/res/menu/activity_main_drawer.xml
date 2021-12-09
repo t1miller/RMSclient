@@ -2,7 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:tools="http://schemas.android.com/tools"
       tools:showIn="navigation_view">
-
     <group android:checkableBehavior="single">
         <item
                 android:id="@+id/wifiaware"
@@ -10,14 +9,9 @@
                 android:title="Wifi-Aware Test"/>
 
         <item
-                android:id="@+id/node"
+                android:id="@+id/messageAppActivity"
                 android:icon="@drawable/cell_wifi"
-                android:title="Chord Test"/>
-
-        <item
-                android:id="@+id/networkLibraryActivity"
-                android:icon="@drawable/cell_wifi"
-                android:title="Network Library Test"/>
+                android:title="Message App"/>
     </group>
 
 </menu>

@@ -4,16 +4,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.*
 
 @Serializable
 data class Message(
-    var src: String,
-    var dst: String,
-    var id: String,
-    var msg: String
+    var msg: String,
+    var user: String = "Trent:",
+    var id: String = UUID.randomUUID().toString(),
+    var time: Long = System.currentTimeMillis()
 )
 
-fun List<Message>.toByteArray(): ByteArray {
+fun MutableList<Message>.toByteArray(): ByteArray {
     val jsonList = Json.encodeToString(this)
     return jsonList.toByteArray()
 }

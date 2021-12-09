@@ -10,8 +10,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-import rr.rms.chord.NodeActivity
-import rr.rms.wifiaware.WifiAwareActivity
+import rr.rms.messaging.MessagingActivity
+import rr.rms.wifiaware.library.test.WifiAwareActivity
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -59,19 +59,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.wifiaware -> {
                 val intent = Intent(this, WifiAwareActivity::class.java)
                 startActivity(intent)
             }
-            R.id.node -> {
-                val intent = Intent(this, NodeActivity::class.java)
+            R.id.messageAppActivity -> {
+                val intent = Intent(this, MessagingActivity::class.java)
                 startActivity(intent)
-            }
-            R.id.networkLibraryActivity -> {
-//                val intent = Intent(this, NetworkLibraryActivity::class.java)
-//                startActivity(intent)
             }
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)

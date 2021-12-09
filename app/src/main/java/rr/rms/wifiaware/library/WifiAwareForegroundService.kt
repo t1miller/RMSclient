@@ -13,25 +13,27 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import rr.rms.R
-import rr.rms.wifiaware.WifiAwareActivity
+import rr.rms.wifiaware.library.test.WifiAwareActivity
+import rr.rms.wifiaware.library.aware.WifiAwareManager
+import rr.rms.wifiaware.library.net.Client
+import rr.rms.wifiaware.library.net.ServerClientManager
+import rr.rms.wifiaware.library.net.Server
 import timber.log.Timber
+import java.net.Socket
 
 class WifiAwareForegroundService: Service() {
 
     private val CHANNEL_ID = "RMS"
     private var currentState = STATE.START
-//    private var msgQueue = Array(16) { MessageUtils.randomMessage() }
-//    var receivedMessages = mutableListOf<Message>()
 
     enum class STATE {
         START,
         PUBLISHING,
         SUBSCRIBING,
         PUBLISHING_AND_SUBSCRIBING,
-        SYNCING_STARTED_PUBLISHER,
-        SYNCING_STARTED_SUBSCRIBER,
-        SYNCING_DONE_PUBLISHER,
-        SYNCING_DONE_SUBSCRIBER,
+        SERVER_STARTED,
+        CLIENT_STARTED,
+        SERVER_AND_CLIENT_STARTED,
         DISCONNECTED,
     }
 
@@ -44,45 +46,7 @@ class WifiAwareForegroundService: Service() {
         fun stopService(context: Context) {
             val stopIntent = Intent(context, WifiAwareForegroundService::class.java)
             context.stopService(stopIntent)
-            WifiAwareClient.closeAwareSession()
-        }
-
-        // test function
-        fun startClient () {
-            CoroutineScope(Dispatchers.Main).launch {
-                WifiAwareClient.receiveData(object : WifiAwareClient.RcvDataCallback{
-                    override fun onSuccess(dataRcvd: ByteArray) {
-                        Logger.log(Logger.ACTIONS.SYNC_RCV, Logger.me(), "dont know", String(dataRcvd))
-                    }
-                })
-            }
-        }
-
-        // test function
-        fun startServer() {
-            CoroutineScope(Dispatchers.Main).launch {
-                val dataToSend = "'hello sir'\n-client".toByteArray()
-                WifiAwareClient.sendData(dataToSend, object : WifiAwareClient.SendDataCallback{
-                    override fun onSuccess() {
-                        Logger.log(Logger.ACTIONS.SYNC_SEND, "dont know", Logger.me(), String(dataToSend))
-                    }
-                })
-            }
-        }
-
-        // test function
-        fun startPublishing() {
-            WifiAwareClient.publish("rms", "i am the publisher", null)
-        }
-
-        // test function
-        fun startSubscribing() {
-            WifiAwareClient.subscribe("rms", emptyList(), Logger.me(), null)
-        }
-
-        // test function
-        fun closeSession() {
-            WifiAwareClient.closeAwareSession()
+            WifiAwareManager.closeAwareSession()
         }
     }
 
@@ -112,106 +76,79 @@ class WifiAwareForegroundService: Service() {
     private fun nextState(state: STATE) {
         currentState = state
         when (currentState) {
-            STATE.START -> {
-//                clear()
-//                nextState(STATE.PUBLISHING_AND_SUBSCRIBING)
-            }
-            STATE.PUBLISHING -> {
-                startPublishing()
-            }
-            STATE.SUBSCRIBING -> {
-                startSubscribing()
-            }
+            STATE.START -> nextState(STATE.PUBLISHING_AND_SUBSCRIBING)
+            STATE.PUBLISHING -> startPublishing()
+            STATE.SUBSCRIBING -> startSubscribing()
             STATE.PUBLISHING_AND_SUBSCRIBING -> {
                 startPublishing()
                 startSubscribing()
             }
-            STATE.SYNCING_STARTED_PUBLISHER -> {
-//                startSyncingServer()
-            }
-            STATE.SYNCING_STARTED_SUBSCRIBER -> {
-//                startSyncingClient()
-            }
-            STATE.SYNCING_DONE_PUBLISHER -> {
-//                clear()
-//                nextState(STATE.PUBLISHING)
-            }
-            STATE.SYNCING_DONE_SUBSCRIBER -> {
-//                clear()
-//                nextState(STATE.SUBSCRIBING)
-            }
-            STATE.DISCONNECTED -> {
-                // todo error handling
-                nextState(STATE.START)
+            STATE.DISCONNECTED -> nextState(STATE.START)
+            STATE.SERVER_STARTED -> startServers()
+            STATE.CLIENT_STARTED -> startClients()
+            STATE.SERVER_AND_CLIENT_STARTED -> {
+                startClients()
+                startServers()
             }
         }
         Timber.d("state machine state: $currentState")
     }
 
-//    private fun clear() {
-////        WifiAwareClient.closeAwareSession() // todo should be handled differently
-//    }
+    private fun startPublishing() {
+        WifiAwareManager.publish("rms-msg", "i am the publisher", object : WifiAwareManager.PublishCallback{
+            override fun onMessageSent(msgSent: String) {}
 
-//    private fun startPublishing() {
-//        WifiAwareClient.publish("rms", "i am the publisher", object : WifiAwareClient.PublishCallback{
-//            override fun onMessageReceived(
-//                publishDiscoverySession: PublishDiscoverySession?,
-//                peerHandle: PeerHandle?,
-//                msgRcvd: ByteArray
-//            ) {
-//                nextState(STATE.SYNCING_STARTED_PUBLISHER)
-//            }
-//
-//            override fun onMessageSent(msgSent: String) {
-//            }
-//
-//            override fun onError(msg: String) {
-//                Timber.e("publish error: $msg")
-//            }
-//        })
-//    }
+            override fun onServerSocket(socket: Socket?) {
+                socket?.let {
+                    ServerClientManager.addServer(Server(it))
+                }
+                nextState(STATE.SERVER_STARTED)
+            }
 
-//    private fun startSubscribing() {
-//        WifiAwareClient.subscribe("rms", emptyList(), Logger.me(), object : WifiAwareClient.SubscribeCallback{
-//            override fun onMessageReceived(
-//                subscribeDiscoverySession: SubscribeDiscoverySession?,
-//                peerHandle: PeerHandle?,
-//                msgRcvd: ByteArray
-//            ) {
-//                nextState(STATE.SYNCING_STARTED_SUBSCRIBER)
-//            }
-//
-//            override fun onMessageSent(msgSent: String) {}
-//
-//            override fun onError(msg: String) {
-//                Timber.e("subscribe error: $msg")
-//            }
-//        })
-//    }
+            override fun onError(msg: String) {
+                Timber.e("publish error: $msg")
+            }
+        })
+    }
 
-//    private fun startSyncingServer() {
-//        WifiAwareClient.getSocket(applicationContext, true, object : WifiAwareClient.SocketCallback{
-//            override fun onResponse(socket: Socket?) {
-//                Timber.d("publisher network socket onResponse()")
-//
-//                // publisher sends data
-//                NetworkUtils.sendBytes(socket, "hello".toByteArray())
-//                Logger.log(Logger.ACTIONS.SYNC_SEND, Logger.me(), "dont know", msgQueue.toString())
-//            }
-//        })
-//    }
-//
-//    private fun startSyncingClient() {
-//        WifiAwareClient.getSocket(applicationContext, false, object : WifiAwareClient.SocketCallback{
-//            override fun onResponse(socket: Socket?) {
-//                Timber.d("subscriber network socket onResponse()")
-//
-//                // subscriber receives data
-//                val data = NetworkUtils.receiveBytes(socket)
-//                Logger.log(Logger.ACTIONS.SYNC_RCV, "dont know", Logger.me(), "data.toMessages().toString()")
-//            }
-//        })
-//    }
+    private fun startSubscribing() {
+        WifiAwareManager.subscribe("rms-msg", emptyList(),"i am the subscriber", object : WifiAwareManager.SubscribeCallback{
+            override fun onMessageSent(msgSent: String) {}
+
+            override fun onClientSocket(socket: Socket?) {
+                socket?.let {
+                    ServerClientManager.addClient(Client(it))
+                }
+                nextState(STATE.CLIENT_STARTED)
+            }
+
+            override fun onError(msg: String) {
+                Timber.e("subscribe error: $msg")
+            }
+        })
+    }
+
+    private fun startServers() {
+        CoroutineScope(Dispatchers.Main).launch {
+            Timber.d("starting servers")
+            ServerClientManager.sendDataToClients(object : ServerClientManager.ServerClientCallback{
+                override fun done() {
+                    //
+                }
+            })
+        }
+    }
+
+    private fun startClients() {
+        CoroutineScope(Dispatchers.Main).launch {
+            Timber.d("starting clients")
+            ServerClientManager.receiveDataFromServers(object : ServerClientManager.ServerClientCallback{
+                override fun done() {
+                    //
+                }
+            })
+        }
+    }
 
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(CHANNEL_ID, "Foreground Service Channel",

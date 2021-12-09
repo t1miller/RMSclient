@@ -1,6 +1,5 @@
-package rr.rms.wifiaware.library.test
+package rr.rms.wifiaware.library.models
 
-import rr.rms.wifiaware.library.models.Message
 import java.util.*
 import kotlin.random.Random
 
@@ -37,16 +36,18 @@ object MessageUtils {
         return names[randIndex]
     }
 
+    private fun randomUser() : String {
+        return "User:trent"
+    }
+
     private fun randomId(): String {
         return UUID.randomUUID().toString()
     }
 
     fun randomMessage(): Message {
         return Message(
-            randomName(),
-            randomName(),
-            randomId(),
-            randomGreeting()
+            randomGreeting(),
+            randomUser()
         )
     }
 }

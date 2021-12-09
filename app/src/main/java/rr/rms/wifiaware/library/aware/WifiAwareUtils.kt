@@ -1,11 +1,17 @@
-package rr.rms.wifiaware.library
+package rr.rms.wifiaware.library.aware
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.aware.*
+import android.net.wifi.aware.WifiAwareManager
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import rr.rms.MainApplication
 import timber.log.Timber
 
@@ -97,6 +103,22 @@ object WifiAwareUtils {
     @SuppressLint("HardwareIds")
     fun getDeviceId(): String {
         return Settings.Secure.getString(MainApplication.applicationContext.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
+    }
+
+    fun setupPermissions(requestCode: Int, activity: Activity) {
+        val permissionFine = ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (permissionFine != PackageManager.PERMISSION_GRANTED){
+            Timber.d("need to ask user for permission")
+            showPermissionDialog(requestCode, activity)
+        }
+    }
+
+    private fun showPermissionDialog(requestCode: Int, activity: Activity) {
+        ActivityCompat.requestPermissions(
+            activity,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            requestCode
+        )
     }
 }
 

@@ -1,14 +1,13 @@
 package rr.rms.chord
 
 import rr.rms.cache.BlockCache
-import rr.rms.wifiaware.library.NetworkUtils
+import rr.rms.wifiaware.library.net.NetworkUtils
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.*
 import kotlin.math.pow
-
 
 /**
  *  A Node:
