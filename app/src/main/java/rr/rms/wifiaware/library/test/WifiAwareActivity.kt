@@ -54,30 +54,20 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
             WifiAwareForegroundService.stopService(this)
         }
 
-//        val startServerButton = findViewById<Button>(R.id.serverButton)
-//        startServerButton.setOnClickListener {
-//            WifiAwareForegroundService.startServer()
-//        }
-//
-//        val startClientButton = findViewById<Button>(R.id.clientButton)
-//        startClientButton.setOnClickListener {
-//            WifiAwareForegroundService.startClient()
-//        }
-//
-//        val startSubscriberButton = findViewById<Button>(R.id.subscribeButton)
-//        startSubscriberButton.setOnClickListener {
-//            WifiAwareForegroundService.startSubscribing()
-//        }
-//
-//        val startPublisherButton = findViewById<Button>(R.id.publishButton)
-//        startPublisherButton.setOnClickListener {
-//            WifiAwareForegroundService.startPublishing()
-//        }
-//
-//        val closeSessionButton = findViewById<Button>(R.id.closeSessionButton)
-//        closeSessionButton.setOnClickListener {
-//            WifiAwareForegroundService.closeSession()
-//        }
+        val startSessionButton = findViewById<Button>(R.id.sessionButton)
+        startSessionButton.setOnClickListener {
+            WifiAwareForegroundService.sessionTest()
+        }
+
+        val startSubscriberButton = findViewById<Button>(R.id.subscribeButton)
+        startSubscriberButton.setOnClickListener {
+            WifiAwareForegroundService.subscribeTest()
+        }
+
+        val startPublisherButton = findViewById<Button>(R.id.publishButton)
+        startPublisherButton.setOnClickListener {
+            WifiAwareForegroundService.publishTest()
+        }
 
         // permission check
         WifiAwareUtils.setupPermissions(PERMISSION_REQUEST_CODE, this)
@@ -94,27 +84,6 @@ class WifiAwareActivity : AppCompatActivity(), Logger.LoggerCallback {
 
         Logger.addListener(this)
     }
-
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        unregisterReceiver(receiver)
-//    }
-
-//    private fun setupPermissions() {
-//        val permissionFine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//        if (permissionFine != PackageManager.PERMISSION_GRANTED){
-//            Timber.d("need to ask user for permission")
-//            showPermissionDialog()
-//        }
-//    }
-//
-//    private fun showPermissionDialog() {
-//        ActivityCompat.requestPermissions(
-//            this,
-//            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-//            PERMISSION_REQUEST_CODE
-//        )
-//    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

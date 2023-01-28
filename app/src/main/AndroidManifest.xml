@@ -24,6 +24,11 @@
                 android:label="@string/title_activity_message"
                 android:theme="@style/AppTheme.NoActionBar"/>
 
+        <activity
+                android:name=".wifiaware.library.test.WifiAwareActivity"
+                android:label="@string/title_activity_network_library" />
+
+
         <service android:name=".wifiaware.library.WifiAwareForegroundService" />
 
         <activity

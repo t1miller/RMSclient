@@ -29,6 +29,7 @@ object Logger {
     }
 
     enum class ACTIONS{
+        SESSION,
         PUBLISH,
         PUBLISH_MSG,
         PUBLISH_MSG_MSG,

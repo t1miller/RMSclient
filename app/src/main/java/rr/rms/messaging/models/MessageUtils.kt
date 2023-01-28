@@ -1,4 +1,4 @@
-package rr.rms.wifiaware.library.models
+package rr.rms.messaging.models
 
 import java.util.*
 import kotlin.random.Random

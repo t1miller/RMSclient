@@ -11,13 +11,14 @@ import rr.rms.MainApplication
 import rr.rms.R
 import rr.rms.wifiaware.library.WifiAwareForegroundService
 import rr.rms.wifiaware.library.aware.WifiAwareUtils
-import rr.rms.wifiaware.library.models.Message
+import rr.rms.messaging.models.Message
+import timber.log.Timber
 
-class MessagingActivity : AppCompatActivity() {
+class MessagingActivity : AppCompatActivity(), MessagingCache.MessagingCacheListener {
 
     private val PERMISSION_REQUEST_CODE = 101
     lateinit var messagingViewModel: MessagingViewModel
-    lateinit var receivedMsgsAdapter: MessagingAdapter
+    lateinit var messageAdapter: MessagingAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,11 +32,11 @@ class MessagingActivity : AppCompatActivity() {
 
         sendButton.setOnClickListener {
             val msgText = msgEditText.text.toString()
-            messagingViewModel.sendMessage(Message(msgText))
+            MessagingCache.addMessagesSend(listOf(Message(msgText)))
         }
 
         refreshButton.setOnClickListener {
-            messagingViewModel.getReceivedMessages()
+           // todo
         }
 
         restartButton.setOnClickListener {
@@ -46,19 +47,20 @@ class MessagingActivity : AppCompatActivity() {
         WifiAwareUtils.setupPermissions(PERMISSION_REQUEST_CODE,this)
 
         // recylcler view setup
-        receivedMsgsAdapter = MessagingAdapter()
+        messageAdapter = MessagingAdapter()
         val msgRecyclerView = findViewById<RecyclerView>(R.id.messagesRecyclerView)
         with(msgRecyclerView){
-            adapter = receivedMsgsAdapter
+            adapter = messageAdapter
             layoutManager = LinearLayoutManager(this@MessagingActivity)
         }
 
         // viewmodel setup
         messagingViewModel = ViewModelProvider(this)[MessagingViewModel::class.java]
         messagingViewModel.receivedMessages.observe(this,  { msgs ->
-            receivedMsgsAdapter.addMessages(msgs)
+            messageAdapter.addMessages(msgs)
         })
 
+        MessagingCache.addCacheChangedListener(this)
         WifiAwareForegroundService.startService(MainApplication.applicationContext)
     }
 
@@ -72,5 +74,10 @@ class MessagingActivity : AppCompatActivity() {
                 // dont care
             }
         }
+    }
+
+    override fun onMessagesReceived(msgs: List<Message>) {
+        Timber.d("updating viewmodel w/ messages: $msgs")
+        messagingViewModel.updateReceivedMessages(msgs)
     }
 }

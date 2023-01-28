@@ -16,7 +16,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/closeSessionButton">
+            app:layout_constraintTop_toBottomOf="@+id/sessionButton">
 
         <LinearLayout
                 android:layout_width="match_parent"
@@ -68,10 +68,10 @@
             app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-            android:text="Server"
+            android:text="Session"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/serverButton"
+            android:id="@+id/sessionButton"
             app:layout_constraintTop_toBottomOf="@+id/stopServiceButton"
             app:layout_constraintStart_toStartOf="@+id/scrollview" />
 
@@ -80,7 +80,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/subscribeButton"
-            app:layout_constraintStart_toEndOf="@+id/serverButton"
+            app:layout_constraintStart_toEndOf="@+id/sessionButton"
             app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
 
     <Button
@@ -90,23 +90,6 @@
             android:id="@+id/publishButton"
             app:layout_constraintStart_toEndOf="@+id/subscribeButton"
             app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
-
-    <Button
-            android:text="Client"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/clientButton"
-            app:layout_constraintStart_toEndOf="@+id/publishButton"
-            app:layout_constraintTop_toBottomOf="@+id/stopServiceButton" />
-
-    <Button
-            android:text="Close Session"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/closeSessionButton"
-            app:layout_constraintTop_toBottomOf="@+id/serverButton"
-            app:layout_constraintStart_toStartOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

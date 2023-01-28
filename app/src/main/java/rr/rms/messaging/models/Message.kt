@@ -1,4 +1,4 @@
-package rr.rms.wifiaware.library.models
+package rr.rms.messaging.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -14,7 +14,7 @@ data class Message(
     var time: Long = System.currentTimeMillis()
 )
 
-fun MutableList<Message>.toByteArray(): ByteArray {
+fun List<Message>.toByteArray(): ByteArray {
     val jsonList = Json.encodeToString(this)
     return jsonList.toByteArray()
 }

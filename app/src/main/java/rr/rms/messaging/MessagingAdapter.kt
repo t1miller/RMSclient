@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import rr.rms.R
-import rr.rms.wifiaware.library.models.Message
+import rr.rms.messaging.models.Message
 
 
 class MessagingAdapter : RecyclerView.Adapter<MessagingAdapter.ViewHolder>() {
 
-    private var mList = mutableListOf<Message>()
+    private var mList = listOf<Message>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -30,8 +30,7 @@ class MessagingAdapter : RecyclerView.Adapter<MessagingAdapter.ViewHolder>() {
         return mList.size
     }
 
-    fun addMessages(newMsgs: MutableList<Message>) {
-        mList.clear()
+    fun addMessages(newMsgs: List<Message>) {
         mList = newMsgs
         notifyDataSetChanged()
     }

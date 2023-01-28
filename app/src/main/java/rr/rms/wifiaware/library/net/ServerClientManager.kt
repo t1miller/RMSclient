@@ -1,87 +1,128 @@
 package rr.rms.wifiaware.library.net
 
-import rr.rms.wifiaware.library.models.Message
-import rr.rms.wifiaware.library.models.toByteArray
-import rr.rms.wifiaware.library.models.toMessages
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.aware.*
+import kotlinx.coroutines.*
+import rr.rms.MainApplication
+import rr.rms.messaging.MessagingCache
+import rr.rms.messaging.models.toByteArray
+import rr.rms.messaging.models.toMessages
+import rr.rms.wifiaware.library.aware.WifiAwareUtils
 import timber.log.Timber
+import java.lang.Exception
+import java.net.ServerSocket
 
-// todo broadcast results instead of callback
 object ServerClientManager {
-    private val clientQueue = ArrayDeque<Client>()
-    private val serverQueue = ArrayDeque<Server>()
 
-    // list of messages you generated to send to everyone
-    private val sendMsg = mutableListOf<Message>()
+    private val connectManager = MainApplication.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    // list of messages you generate that were actually sent and to whom
-    private val sentMsgsTo = hashMapOf<String, MutableList<Message>>()
+//    suspend fun sendDataToClientBlocking(publishSession: PublishDiscoverySession?, subscribePeerHandle: PeerHandle) = coroutineScope {
+//        Timber.d("sending data to client")
+//        val deferred = async { sendDataToClient(publishSession, subscribePeerHandle) }
+//        deferred.await()
+//    }
 
-    // list of messages others have sent to everyone
-    private val receivedMessages = hashMapOf<String, MutableList<Message>>()
-
-    interface ServerClientCallback {
-        fun done()
-    }
-
-    fun addSendMessage(msg: Message) {
-        sendMsg.add(msg)
-    }
-
-    fun getReceivedMessages(): HashMap<String, MutableList<Message>> {
-        return receivedMessages
-    }
-
-    fun addClient(client: Client) {
-        clientQueue.add(client)
-    }
-
-    fun addServer(server: Server) {
-        serverQueue.add(server)
-    }
-
-    // send all data to clients
-    suspend fun sendDataToClients(callback: ServerClientCallback) {
-
-        if(sendMsg.isEmpty()) {
-            Timber.d("no messages to send")
+    fun sendDataToClient(publishSession: PublishDiscoverySession?, subscribePeerHandle: PeerHandle) {
+        GlobalScope.launch {
+            try {
+                getServerSocket(publishSession, subscribePeerHandle)
+            } catch (e: Exception){
+                Timber.e("error server socket: $e")
+            }
         }
+    }
 
-        while(serverQueue.size > 0){
-            val server = serverQueue.removeFirst()
-            val address = server.address()
-            server.sendData(sendMsg.toByteArray(), object: Server.SendDataCallback {
-                override fun onSuccess() {
-                    Timber.d("sent data to $address")
-                    sentMsgsTo[address]?.addAll(sendMsg)
+    private suspend fun getServerSocket(publishSession: PublishDiscoverySession?, subscribePeerHandle: PeerHandle) = withContext(Dispatchers.IO) {
+        Timber.d("getting server socket")
+        val serverSocket = ServerSocket(0)
+        val networkRequest = WifiAwareUtils.buildPublisherNetworkRequest(publishSession, subscribePeerHandle, serverSocket.localPort)
+        val callback = object : ConnectivityManager.NetworkCallback() {
+
+            override fun onUnavailable() {
+                Timber.e("server socket unavailable")
+//                connectManager.unregisterNetworkCallback(this)
+            }
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) {
+                val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
+                val serverSocketAccepted = serverSocket.accept()
+                Timber.d("server socket: port used = ${serverSocketAccepted.port} peerIpv6 = ${peerAwareInfo.peerIpv6Addr} peerPort = ${peerAwareInfo.port}")
+                GlobalScope.launch {
+                    val data = MessagingCache.getMessagesAll()
+                    Timber.d("server socket not null, sent data to client, data = $data")
+                    NetworkUtils.sendData(serverSocketAccepted, data.toByteArray())
+//                    serverSocket?.close()
                 }
-            })
-            server.close()
+            }
+
+            override fun onLost(network: Network) {
+                Timber.e("server socket onLost()")
+//                connectManager.unregisterNetworkCallback(this)
+            }
         }
-        callback.done()
+
+        if (networkRequest != null) {
+            Timber.d("server network request sent")
+            connectManager.requestNetwork(networkRequest, callback)
+        }
     }
 
-    // receive all data from servers
-    suspend fun receiveDataFromServers(callback: ServerClientCallback) {
-        while(clientQueue.size > 0){
-            val client = clientQueue.removeFirst()
-            client.receiveData(object: Client.ReceiveDataCallback{
-                override fun onSuccess(dataReceived: ByteArray) {
-                    val address = client.address()
-                    val msgs = dataReceived.toMessages()
-                    Timber.d("received data from $address")
-                    receivedMessages[address]?.addAll(msgs)
+//    suspend fun receiveDataFromServerBlocking(subscribeSession: SubscribeDiscoverySession?, publishPeerHandle: PeerHandle?) = coroutineScope {
+//        Timber.d("receiving data from server")
+//        val deferred = async { receiveDataFromServer(subscribeSession, publishPeerHandle, this) }
+//        deferred.await()
+//    }
+
+    suspend fun receiveDataFromServer(subscribeSession: SubscribeDiscoverySession?, publishPeerHandle: PeerHandle?, scope: CoroutineScope) = withContext(Dispatchers.IO) {
+        try {
+            getClientSocket(subscribeSession, publishPeerHandle, scope)
+        } catch (e: Exception){
+            Timber.e("error server socket: $e")
+        }
+    }
+
+    private suspend fun getClientSocket(subscribeSession: SubscribeDiscoverySession?, publishPeerHandle: PeerHandle?, scope: CoroutineScope) = withContext(Dispatchers.IO) {
+        Timber.d("getting client socket")
+        val networkRequest: NetworkRequest? = WifiAwareUtils.buildSubscriberNetworkRequest(subscribeSession, publishPeerHandle)
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onUnavailable() {
+                Timber.e("client socket unavailable")
+//                connectManager.unregisterNetworkCallback(this)
+            }
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) {
+                val peerAwareInfo = networkCapabilities.transportInfo as WifiAwareNetworkInfo
+                val peerIpv6 = peerAwareInfo.peerIpv6Addr
+                val peerPort = peerAwareInfo.port
+                val clientSocket = network.socketFactory.createSocket(peerIpv6, peerPort)
+                Timber.d("client socket: port used = ${clientSocket.port} peerIpv6 = $peerIpv6 peerPort = ${peerAwareInfo.port}")
+                scope.launch {
+                    val data = NetworkUtils.receiveData(clientSocket)
+                    Timber.d("client socket not null, received data from server = $data")
+                    MessagingCache.addMessagesReceived(data.toMessages())
+//                    clientSocket?.close()
                 }
-            })
-            client.close()
-        }
-        callback.done()
-    }
+            }
 
-    fun HashMap<String, MutableList<Message>>.flatten(): MutableList<Message> {
-        val values = mutableListOf<Message>()
-        forEach { (_, v) ->
-            values.addAll(v)
+            override fun onLost(network: Network) {
+                Timber.e("client socket onLost()")
+//                connectManager.unregisterNetworkCallback(this)
+            }
         }
-        return values
+
+        if (networkRequest != null) {
+            Timber.d("client network request sent")
+            connectManager.requestNetwork(networkRequest, callback)
+        }
     }
 }

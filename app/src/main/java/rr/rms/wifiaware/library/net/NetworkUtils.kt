@@ -3,15 +3,27 @@ package rr.rms.wifiaware.library.net
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import rr.rms.MainApplication
+import rr.rms.wifiaware.library.logging.Logger
+import rr.rms.messaging.models.toMessages
 import timber.log.Timber
 import java.net.Socket
 import kotlin.system.measureTimeMillis
 
 object NetworkUtils {
 
-    // todo writ ebetter
-    fun receiveBytes(socket: Socket?) : ByteArray{
+    // coroutine that waits for receiveBytes() to finish
+    suspend fun receiveData(socket: Socket?) = coroutineScope {
+        val deferred = async { receiveBytes(socket) }
+        deferred.await()
+    }
+
+    // coroutine that receive bytes on IO background thread
+    private suspend fun receiveBytes(socket: Socket?): ByteArray = withContext(Dispatchers.IO){
         if(socket == null){
             Timber.e("socket null cant receiveBytes()")
         }
@@ -21,11 +33,19 @@ object NetworkUtils {
             bytesRead = inputStream?.readBytes()
         }
         Timber.d("receiveBytes() bytes = ${bytesRead?.size} in ms = $timeInMs")
-        return bytesRead ?: ByteArray(0)
+        Logger.log(Logger.ACTIONS.SYNC_RCV, address(socket), Logger.me(), bytesRead?.toMessages().toString())
+        bytesRead ?: ByteArray(0)
     }
 
-    // todo writ ebetter
-    fun sendBytes(socket: Socket?, byteArray: ByteArray) {
+    // coroutine that waits for sendBytes() to finish
+    suspend fun sendData(socket: Socket?, data: ByteArray) = coroutineScope {
+        val deferred = async { sendBytes(socket, data) }
+        deferred.await()
+        Logger.log(Logger.ACTIONS.SYNC_SEND, Logger.me(), address(socket), data.toMessages().toString())
+    }
+
+    // coroutine that sends bytes on IO background thread
+    private suspend fun sendBytes(socket: Socket?, byteArray: ByteArray) = withContext(Dispatchers.IO) {
         if(socket == null){
             Timber.e("socket null cant sendBytes()")
         }
@@ -49,5 +69,9 @@ object NetworkUtils {
                 (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+    }
+
+    private fun address(socket: Socket?): String {
+        return socket?.remoteSocketAddress.toString()
     }
 }
